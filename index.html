@@ -6,75 +6,90 @@
 <title>Заміна лічильника PLC</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-/* Загальний стиль */
-body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 5px; color: #111; }
+/* ЗАГАЛЬНИЙ СТИЛЬ */
+body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 5px; color: #111; font-size: 16px; }
 .container { width: 100%; box-sizing: border-box; padding-bottom: 60px; }
 .card { background: #fff; padding: 15px; border-radius: 12px; margin-top: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .hidden { display: none !important; }
 
-/* Екран входу */
-#login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f0f4f8; padding: 20px; box-sizing: border-box; }
-.login-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 12px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+/* ЕКРАН ВХОДУ (Оригінальний з фокусом) */
+#login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f0f4f8; padding: 20px; box-sizing: border-box; transition: align-items 0.3s ease, padding-top 0.3s ease; }
+#login.login-focused { align-items: flex-start; padding-top: 10px; }
+.login-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
 .input-group { position: relative; margin-bottom: 15px; }
 .input-group span { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #666; }
-.input-group input { width: 100%; padding: 15px 15px 15px 45px; font-size: 18px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+.input-group input { width: 100%; padding: 15px 15px 15px 45px; font-size: 18px; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
 
-/* Кнопки та інпути */
-button { width: 100%; min-height: 48px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; color: #fff; margin-top: 10px; cursor: pointer; }
+/* КНОПКИ */
+button { width: 100%; min-height: 48px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; color: #fff; margin-top: 10px; transition: transform 0.1s; cursor: pointer; }
 button:active { transform: scale(0.97); }
 .actionBtn { background: #2196F3; }
-.btn-save { background: #FF9800; }
+.btn-save { background: #4CAF50; }
 .btn-back { background: #9E9E9E; }
-input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+.btn-next { background: #FF9800; }
+.btn-sync { background: #d32f2f; margin-top: 15px; }
 
-/* Дизайн пошуку і сканера */
+/* ІНПУТИ ТА СКАНЕР */
+input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; box-sizing: border-box; font-weight: bold; margin: 0; }
+textarea { resize: none; overflow: hidden; font-size: 14px; }
 .input-with-scanner { display: flex; align-items: center; gap: 10px; width: 100%; }
-.input-with-scanner input { flex: 1; min-height: 50px; font-size: 18px; border: 2px solid #e0e0e0; }
+.input-with-scanner input { flex: 1; min-height: 50px; padding: 10px 15px; font-size: 18px; border: 2px solid #e0e0e0; }
 .scan-btn-outer { flex: 0 0 50px; height: 50px; background: #333; border-radius: 8px; border: none; display: flex; justify-content: center; align-items: center; padding: 0; margin: 0; }
 .scan-icon { width: 32px; height: 32px; fill: #FF9800; }
 
-/* Блоки даних */
-.workerCard { background: #e3f2fd; border-radius: 8px; padding: 10px; margin-bottom: 15px; font-size: 16px; font-weight: bold; text-align: center; color: #1565c0; }
-.topInfoRow { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-.info { font-size: 16px; margin-bottom: 6px; }
+/* ІНФО БЛОКИ (Точна копія твого стилю) */
+.workerCard { background: #e3f2fd; border-radius: 8px; padding: 10px; margin-bottom: 15px; font-size: 16px; }
+.topInfoRow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 18px; font-weight: bold; }
+.accountRight { color: #d32f2f; font-size: 18px; }
+.info { font-size: 16px; margin-bottom: 6px; line-height: 1.2; }
 .valueBold { font-weight: bold; color: #1565c0; }
-.blockTitle { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; margin-top: 15px; border-top: 2px solid #eee; padding-top: 10px;}
+.sectionLine { border-top: 2px solid #eee; margin: 15px 0; }
+.blockTitle { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }
+.fieldGrid { display: flex; flex-direction: column; gap: 8px; }
+.fieldLabel { font-size: 14px; font-weight: normal; margin-bottom: -4px; color: #555; }
 
-/* Пломби та покази */
+/* ПЛОМБИ ТА ПОКАЗИ */
 .plombRow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .plombPlace { flex: 0 0 32%; font-size: 13px; line-height: 1.1; }
 .plombField { flex: 1; }
-.plombField input { text-align: center; padding: 8px 4px; }
+.plombField input { text-align: center; font-size: 15px; padding: 8px 4px; min-height: 40px; }
 .meterRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .meterBox { text-align: center; }
-.meterBox label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 4px; }
-.meterBox input { text-align: center; }
+.meterBox label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #444; }
+.meterBox input { text-align: center; font-size: 16px; padding: 8px 2px; min-height: 44px; }
 
-/* Сканер вікно */
-#scanner-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; }
-#scanner-box { width: 95%; max-width: 400px; position: relative; border-radius: 12px; overflow: hidden; background: #000; }
-.close-scan-btn { position: absolute; top: 10px; right: 10px; width: 45px; height: 45px; background: #d32f2f; color: white; border-radius: 50%; font-size: 22px; z-index: 10001; }
+/* ПІДКАЗКИ ТИПІВ ЛІЧИЛЬНИКІВ */
+.meterTypeBox { position: relative; }
+.meterTypeHints { position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.meterTypeItem { padding: 12px; font-size: 16px; cursor: pointer; border-bottom: 1px solid #eee; background: #fff; }
 
-/* Офлайн плашка */
-#offlineBanner { position: fixed; bottom: 0; left: 0; width: 100%; background: #d32f2f; color: white; text-align: center; padding: 10px; font-weight: bold; display: none; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); }
+/* ПРОФЕСІЙНИЙ СКАНЕР (Оригінал) */
+#scanner-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; transition: background 0.1s; }
+.scan-success-flash { background: rgba(76, 175, 80, 0.8) !important; }
+#scanner-box { width: 95%; max-width: 400px; position: relative; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.close-scan-btn { position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #d32f2f; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10001; margin:0; padding:0; }
+.torch-btn { position: absolute; top: -15px; left: -15px; width: 45px; height: 45px; background: #FFc107; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10001; margin:0; padding:0; transition: background 0.2s; }
+
+/* ОФЛАЙН ПЛАШКА */
+#offlineBanner { position: fixed; bottom: 0; left: 0; width: 100%; background: #d32f2f; color: white; text-align: center; padding: 10px; font-weight: bold; display: none; z-index: 9999; }
 #offlineBanner.show { display: block; }
 </style>
 </head>
 <body>
 
-<!-- ЛОГІН -->
+<!-- ЛОГІН (Оригінальний дизайн) -->
 <div id="login">
   <div class="login-card">
     <div style="font-size: 40px; margin-bottom: 10px;">⚡</div>
-    <div style="font-size: 16px; color: #555;">Полтава Обленерго</div>
-    <div style="font-size: 22px; font-weight: 900; margin-bottom: 25px;">ЗАМІНА ЛІЧИЛЬНИКА PLC</div>
+    <div style="font-size: 16px; color: #555; text-transform: uppercase;">Полтава Обленерго</div>
+    <div style="font-size: 24px; font-weight: 900; margin-bottom: 25px;">ЗАМІНА PLC</div>
     <div class="input-group">
       <span>👤</span>
       <input id="tab" type="number" placeholder="Табельний номер" autocomplete="off">
     </div>
     <div class="input-group">
       <span>🔒</span>
-      <input id="pass" type="tel" style="-webkit-text-security: disc;" placeholder="Код доступу (ПІН)">
+      <input id="pass" type="tel" style="-webkit-text-security: disc;" autocomplete="new-password" placeholder="Код доступу (ПІН)">
     </div>
     <button onclick="doLogin()" class="actionBtn" id="btnLogin">Увійти</button>
   </div>
@@ -85,42 +100,61 @@ input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px;
 
   <!-- ПОШУК -->
   <div class="card" id="searchBlock">
-    <div class="workerCard">Працівник: <span id="currentUser"></span></div>
-    <h3 style="text-align: center; margin-top: 0;">Введіть О/Р споживача</h3>
+    <div class="workerCard">Т/н: <span id="currentUserTab"></span> <span id="currentUser"></span></div>
+    
+    <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #333; text-align: center;">Введіть або відскануйте О/Р</div>
     
     <div class="input-with-scanner">
       <input id="account" placeholder="Особовий рахунок" autocomplete="off" inputmode="numeric">
-      <button class="scan-btn-outer" onclick="startScanner('account')">
+      <button class="scan-btn-outer" onclick="startScanner('account', true)">
         <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
       </button>
     </div>
-    <button class="actionBtn" onclick="search()" id="btnSearch">Знайти</button>
+    <button class="actionBtn" onclick="search()" id="btnSearch">Знайти рахунок</button>
+    
+    <!-- КНОПКА ОФЛАЙН СИНХРОНІЗАЦІЇ -->
+    <button class="btn-sync hidden" id="btnSync" onclick="syncOfflineData()">
+      📤 Незавантажені дані: <span id="offlineCount">0</span>
+    </button>
   </div>
 
-  <!-- КРОК 1: ЗНЯТИЙ ЛІЧИЛЬНИК -->
+  <!-- КРОК 1: ЗНЯТИЙ ЛІЧИЛЬНИК (Точна копія оригінальної сторінки) -->
   <div class="card hidden" id="step1">
-    <div class="topInfoRow"><div style="color:#d32f2f">Знятий лічильник</div><div>О/р: <span id="viewAcc1"></span></div></div>
-    <div class="info">Споживач: <span id="viewPib1" class="valueBold"></span></div>
-    <div class="info">Адреса: <span id="viewAddr1" class="valueBold"></span></div>
+    <div class="topInfoRow"><div>Заміна лічильника</div><div class="accountRight">О/р: <span id="viewAcc1"></span></div></div>
+    <div class="info"><span class="label">Споживач: </span><span id="viewPib1" class="valueBold"></span></div>
+    <div class="info"><span class="label">Адреса: </span><span id="viewAddr1" class="valueBold"></span></div>
+    <div class="sectionLine"></div>
     
-    <div class="blockTitle">Дані лічильника</div>
-    <div>Тип: <input id="remType"></div>
-    <div style="margin-top:8px">Номер: 
+    <div class="blockTitle">Знятий лічильник</div>
+    <div class="fieldGrid">
+      <div class="fieldLabel">Тип</div>
+      <div class="meterTypeBox">
+        <input id="remType" autocomplete="off" onfocus="showMeterTypes('remType', 'remTypeHints')" oninput="filterMeterTypes(this.value, 'remType', 'remTypeHints')">
+        <div id="remTypeHints" class="meterTypeHints hidden"></div>
+      </div>
+      <div class="fieldLabel">Заводський номер</div>
       <div class="input-with-scanner">
         <input id="remNum">
-        <button class="scan-btn-outer" onclick="startScanner('remNum')">
+        <button class="scan-btn-outer" onclick="startScanner('remNum', false)">
           <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
         </button>
       </div>
     </div>
+    <div class="sectionLine"></div>
 
     <div class="blockTitle">Зняті пломби</div>
     <div class="plombRow"><div class="plombPlace">Клемна кришка</div><div class="plombField"><input id="remLichil"></div></div>
     <div class="plombRow"><div class="plombPlace">Шафа обліку 1</div><div class="plombField"><input id="remFasad1"></div></div>
     <div class="plombRow"><div class="plombPlace">Шафа обліку 2</div><div class="plombField"><input id="remFasad2"></div></div>
     <div class="plombRow"><div class="plombPlace">ВКП</div><div class="plombField"><input id="remVkp"></div></div>
+    <div class="plombRow"><div class="plombPlace">Оптопорт</div><div class="plombField"><input id="remOptop"></div></div>
+    <div class="plombRow"><div class="plombPlace">ІМП 1</div><div class="plombField"><input id="remImp1"></div></div>
+    <div class="plombRow"><div class="plombPlace">ІМП 2</div><div class="plombField"><input id="remImp2"></div></div>
+    <div class="plombRow"><div class="plombPlace">ІМП 3</div><div class="plombField"><input id="remImp3"></div></div>
+    <div style="margin-top: 15px;"><b>Інші зняті:</b><textarea id="remOther"></textarea></div>
+    <div class="sectionLine"></div>
 
-    <div class="blockTitle">Покази</div>
+    <div class="blockTitle">Покази знятого лічильника</div>
     <div class="meterRow">
       <div class="meterBox"><label>T</label><input id="remT0" inputmode="numeric"></div>
       <div class="meterBox"><label>T1</label><input id="remT1" inputmode="numeric"></div>
@@ -128,24 +162,31 @@ input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px;
       <div class="meterBox"><label>T3</label><input id="remT3" inputmode="numeric"></div>
     </div>
 
-    <button class="actionBtn" onclick="goToStep2()">Далі (Встановлення) ➡</button>
-    <button class="btn-back" onclick="goHome()">🔙 Скасувати</button>
+    <button class="btn-next" onclick="goToStep2()">Далі ➡</button>
+    <button class="btn-back" onclick="goHome()">🔙 Назад</button>
   </div>
 
-  <!-- КРОК 2: ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК -->
+  <!-- КРОК 2: ВСТАНОВЛЕНИЙ ЛІЧИЛЬНИК (Точна копія) -->
   <div class="card hidden" id="step2">
-    <div class="topInfoRow"><div style="color:#4CAF50">Встановлений лічильник</div><div>О/р: <span id="viewAcc2"></span></div></div>
+    <div class="topInfoRow"><div>Заміна лічильника</div><div class="accountRight">О/р: <span id="viewAcc2"></span></div></div>
+    <div class="sectionLine"></div>
     
-    <div class="blockTitle">Дані лічильника</div>
-    <div>Тип: <input id="instType"></div>
-    <div style="margin-top:8px">Номер: 
+    <div class="blockTitle">Встановлений лічильник</div>
+    <div class="fieldGrid">
+      <div class="fieldLabel">Тип</div>
+      <div class="meterTypeBox">
+        <input id="instType" autocomplete="off" onfocus="showMeterTypes('instType', 'instTypeHints')" oninput="filterMeterTypes(this.value, 'instType', 'instTypeHints')">
+        <div id="instTypeHints" class="meterTypeHints hidden"></div>
+      </div>
+      <div class="fieldLabel">Заводський номер</div>
       <div class="input-with-scanner">
         <input id="instNum">
-        <button class="scan-btn-outer" onclick="startScanner('instNum')">
+        <button class="scan-btn-outer" onclick="startScanner('instNum', false)">
           <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
         </button>
       </div>
     </div>
+    <div class="sectionLine"></div>
 
     <div class="blockTitle">Встановлені пломби</div>
     <div class="plombRow"><div class="plombPlace">Клемна кришка</div><div class="plombField"><input id="instLichil"></div></div>
@@ -156,8 +197,10 @@ input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px;
     <div class="plombRow"><div class="plombPlace">ІМП 1</div><div class="plombField"><input id="instImp1"></div></div>
     <div class="plombRow"><div class="plombPlace">ІМП 2</div><div class="plombField"><input id="instImp2"></div></div>
     <div class="plombRow"><div class="plombPlace">ІМП 3</div><div class="plombField"><input id="instImp3"></div></div>
+    <div style="margin-top: 15px;"><b>Інші встановлені:</b><textarea id="instOther"></textarea></div>
+    <div class="sectionLine"></div>
 
-    <div class="blockTitle">Покази</div>
+    <div class="blockTitle">Покази встановленого лічильника</div>
     <div class="meterRow">
       <div class="meterBox"><label>T</label><input id="instT0" inputmode="numeric"></div>
       <div class="meterBox"><label>T1</label><input id="instT1" inputmode="numeric"></div>
@@ -165,50 +208,146 @@ input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px;
       <div class="meterBox"><label>T3</label><input id="instT3" inputmode="numeric"></div>
     </div>
 
-    <button class="btn-save" onclick="saveData()">💾 ЗБЕРЕГТИ</button>
+    <button class="btn-save" onclick="saveData()">💾 Зберегти</button>
     <button class="btn-back" onclick="goBackToStep1()">🔙 Назад</button>
   </div>
 </div>
 
-<!-- СКАНЕР -->
+<!-- СКАНЕР (Оригінальний із зумом) -->
 <div id="scanner-wrapper">
   <div id="scanner-box">
     <button class="close-scan-btn" onclick="stopScanner()">✖</button>
+    <button id="torch-btn" class="torch-btn" onclick="toggleTorch()">💡</button>
     <div id="reader" style="width: 100%; background: black;"></div>
+    <!-- Кнопки швидкого зуму -->
+    <div style="position: absolute; bottom: 15px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 10002;">
+      <button onclick="setZoom(1)" style="width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid white; color: white; font-weight: bold; padding: 0;">1x</button>
+      <button onclick="setZoom(2)" style="width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid white; color: white; font-weight: bold; padding: 0;">2x</button>
+      <button onclick="setZoom(4)" style="width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid white; color: white; font-weight: bold; padding: 0;">4x</button>
+    </div>
   </div>
 </div>
 
-<!-- ПЛАШКА ОФЛАЙН -->
-<div id="offlineBanner">🚫 Робота Офлайн. Дані збережуться на пристрої.</div>
+<div id="offlineBanner">🚫 Немає інтернету. Робота в Офлайн режимі.</div>
 
 <script>
 // ==========================================
-// НАЛАШТУВАННЯ (ВСТАВ СВІЙ URL ТУТ!)
+// ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi--8wCcysrfQQeRmj7uan97MZJEyXWbKoEbyxWp0WY9U8DYnHprkGSi33dhofPoE7yA/exec"; 
+const SCRIPT_URL = "ТУТ_ВСТАВИТИ_ПОСИЛАННЯ_НА_ВЕБДОДАТОК"; 
 
+// ==========================================
+// БАЗА ЛІЧИЛЬНИКІВ (Вшита для Офлайн)
+// ==========================================
+const METER_TYPES = [
+  "НІК 2102-02.М2В", "NIK2104 AP2T.1802.MC.11", "СОЭ-1.02/2", "СОЭ-1.02/2Т", "ЛЕО", "СО-ЭА10Д", "AD11A.1-5-1", 
+  "EMH ED2500", "GAMMA 100 G1B", "GAMMA 300", "ISKRA ME162-D1A44-V12L11-M2KO", "ITZ", "Landis Gur L550", 
+  "Landis310", "MCS301-CE51B 30MIS-004 000", "MTX 1A10.D/2ZO-CO4", "MTX 1A10.DF.2LO-CO4", "MTX 1A10.DF.2ZO-CD4", 
+  "MTX 1A10.DF.2ZO-CO4", "MTX 3A 10.DF.4Z1-C4", "MTX 3A 10.DG.4Z3-CD4", "MTX 3A 10.DH.4Z1-CD4", 
+  "NIK2100 AP2.0000.0.11", "NIK2100 AP2T.1000.C.11", "NIK2100 AP2T.1002.C.11", "NIK2100 AP2T.1002.MC.11", 
+  "NIK2100 AP2T.2802.MC.11", "NIK2100 AP6T.1002.MC.11", "NIK2100 AP6T.2000.MC.11", "NIK2100 AP6T.2002.MC.11", 
+  "NIK2100 AP6T.2802.MC.11", "NIK2100 AP6T.2902.MC.11", "NIK2104 AP2T.1000.C.11", "NIK2104 AP2T.1000.M.11", 
+  "NIK2104 AP2T.1002.MC.11", "NIK2104 AP2TB.1802.M.11", "NIK2104 AP2TB.1802.MC.11", "NIK2104 AP6T.2602.MC.21", 
+  "NIK2300 AP3.2000.MC.11", "NIK2300 AP3T.1002.MC.11", "NIK2300 AP3T.2002.MC.11", "NIK2300 AP6T.1000.C.11", 
+  "NIK2300 AP6T.2002.MC.11", "NIK2300 AP6T.2802.MC.11", "NIK2300 AP6T.2902.MC.11", "NIK2300 ARP3T.2900.MC.21", 
+  "NIK2300 ARTT.2902.MC.11", "NIK2300 ATT.2900.MC.21", "NIK2303 AP3T.1000.MC.11", "NIK2303 AP3T.1002.MC.11", 
+  "NIK2303 AP3T.1802.MC.11", "NIK2303 AP3T.2000.MC.11", "NIK2303 AP6T.1000.C.11", "NIK2303 AP6T.1000.MC.11", 
+  "NIK2303 AP6T.1002.MC.11", "NIK2303 AP6T.1802.MC.11", "NIK2303 AP6T.1802.MC.21", "NIK2303 AP6T.2000.MC.11", 
+  "NIK2303 ARP3T.1202.MC.11", "NIK2303 ARP3T.1802.MC.11", "NIK2303 ARP3T.1802.MC.21", "NIK2303 ARP6T.1002.MC.11", 
+  "NIK2303 ARP6T.1800.MC.11", "NIK2303 ARP6T.1802.MC.11", "NIK2303 ART.T.1800.MC.11", "NIK2303 AT.T.1800.MC.21", 
+  "NIK2307 0.5S.ARTT.1600.MC.21", "NIK2307 ARP3T.1602.M.21", "NIK2307 ARP3T.1602.MC.21", "NP-06 TD MME 1F 2S-U", 
+  "NP-06 TD MME 1F 3S-U", "АСЕ-3000", "ЛЕО-М1.4", "ЛТЕ-1.03Т", "МЕРИДІАН ЛТЕ-1.03", "МЕРИДІАН ЛТЕ-1.03Т", 
+  "МЕРИДІАН ЛТЕ-1.03ТУ", "МЕРКУРІЙ 231 АТ-01", "Меркурій 200", "Меркурій 200.02", "Меркурій 201", "Меркурій 206", 
+  "НІК 2102-01.Е2МСТ", "НІК 2102-01.Е2МТ1", "НІК 2102-01.Е2Р1", "НІК 2102-01.Е2СТ", "НІК 2102-01.Е2Т", 
+  "НІК 2102-01.Е2ТР1", "НІК 2102-02.М1", "НІК 2102-02.М2", "НІК 2301 АП1", "НІК 2301 АП2В", "НІК 2301 АП3", 
+  "НІК 2301 АП3В", "НІК 2303 АП2Т", "НІК 2303L АП6", "НІК 2303L АП6Т", "СА4-И672п", "СО-193", "СО-197", "СО-2", 
+  "СО-2М", "СО-И446", "СО-И446М", "СО-И449", "СО-И449М1", "СО-И449М1-2", "СО-ЭА09М1", "СО-ЭЭ6705", "СОЕА09М", 
+  "СОЭ-1.02/2КРТ", "СОЭ-1.02/2КТ", "ЦЭ6807Бк"
+];
+
+// ==========================================
+// ГЛОБАЛЬНІ ЗМІННІ
+// ==========================================
 let workerTab = "";
 let workerName = "";
 let currentAccount = "";
-let html5QrcodeScanner = null;
-let currentScanTarget = "";
 
 // ==========================================
-// СТАТУС ІНТЕРНЕТУ
+// ЗВУКИ (Сканер + Збереження)
+// ==========================================
+function playBeep() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(1500, audioCtx.currentTime); 
+    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.1); 
+  } catch (e) {}
+}
+
+function playSuccessSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const playTone = (freq, time, duration) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0.5, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(time); osc.stop(time + duration);
+    };
+    playTone(1000, audioCtx.currentTime, 0.1);
+    playTone(1500, audioCtx.currentTime + 0.15, 0.2);
+  } catch(e) {}
+}
+
+// ==========================================
+// ОФЛАЙН ЛОГІКА І ЛІЧИЛЬНИК
 // ==========================================
 window.addEventListener('online', () => {
   document.getElementById('offlineBanner').classList.remove('show');
-  syncOfflineData(); // Якщо з'явився інтернет - одразу вивантажуємо дані
+  updateOfflineCount();
 });
 window.addEventListener('offline', () => {
   document.getElementById('offlineBanner').classList.add('show');
 });
 
-// Перевірка при старті
-if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+function updateOfflineCount() {
+  let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+  const btn = document.getElementById('btnSync');
+  document.getElementById('offlineCount').innerText = offlineData.length;
+  
+  if(offlineData.length > 0) {
+    btn.classList.remove('hidden');
+    if(navigator.onLine) btn.style.background = "#4CAF50"; // Зелена кнопка, якщо є інет
+    else btn.style.background = "#d32f2f"; // Червона, якщо нема
+  } else {
+    btn.classList.add('hidden');
+  }
+}
 
 // ==========================================
-// ЛОГІН
+// АНІМАЦІЯ ЛОГІНУ (підстрибування)
+// ==========================================
+const loginBox = document.getElementById("login");
+const loginInputs = loginBox.querySelectorAll("input");
+loginInputs.forEach(input => {
+  input.addEventListener("focus", () => loginBox.classList.add("login-focused"));
+  input.addEventListener("blur", () => {
+    setTimeout(() => {
+      if (!Array.from(loginInputs).some(i => i === document.activeElement)) {
+        loginBox.classList.remove("login-focused");
+      }
+    }, 100);
+  });
+});
+
+// ==========================================
+// ВХІД
 // ==========================================
 async function doLogin() {
   const tab = document.getElementById("tab").value;
@@ -219,54 +358,49 @@ async function doLogin() {
   btn.innerText = "Зачекайте...";
 
   if (!navigator.onLine) {
-    // Якщо офлайн - пускаємо без пароля, якщо він вже заходив раніше
     const savedName = localStorage.getItem("workerName");
     if(savedName) {
       workerTab = tab; workerName = savedName;
+      document.getElementById("currentUserTab").innerText = workerTab;
       document.getElementById("currentUser").innerText = workerName;
       document.getElementById("login").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
+      updateOfflineCount();
       return;
     } else {
       btn.innerText = "Увійти";
-      return alert("Немає інтернету для першої перевірки пароля!");
+      return alert("Немає інтернету для перевірки пароля!");
     }
   }
 
   try {
     const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: "login", tab, pass })
+      method: 'POST', body: JSON.stringify({ action: "login", tab, pass })
     }).then(r => r.json());
 
     if (res.success) {
-      workerTab = tab;
-      workerName = res.name;
-      localStorage.setItem("workerName", res.name); // Зберігаємо для офлайну
-      
+      workerTab = tab; workerName = res.name;
+      localStorage.setItem("workerName", res.name); 
+      document.getElementById("currentUserTab").innerText = workerTab;
       document.getElementById("currentUser").innerText = workerName;
       document.getElementById("login").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
-    } else {
-      alert(res.message);
-    }
-  } catch (e) {
-    alert("Помилка зв'язку!");
-  }
+      updateOfflineCount();
+    } else alert(res.message);
+  } catch (e) { alert("Помилка зв'язку!"); }
   btn.innerText = "Увійти";
 }
 
 // ==========================================
-// ПОШУК (Тільки Онлайн, бо база велика)
+// ПОШУК
 // ==========================================
 async function search() {
   const acc = document.getElementById("account").value;
   if (!acc) return alert("Введіть рахунок!");
   
   if (!navigator.onLine) {
-    // В Офлайні просто пускаємо далі з пустими даними споживача
     currentAccount = acc;
-    fillDataForStep1({ account: acc, pib: "ОФЛАЙН", city: "", street: "", house: "", flat: "", type: "", meter: "" });
+    fillDataForStep1({ account: acc, pib: "ОФЛАЙН", street: "ОФЛАЙН", type: "", meter: "" });
     showScreen('step1');
     return;
   }
@@ -283,27 +417,23 @@ async function search() {
       currentAccount = res.data.account;
       fillDataForStep1(res.data);
       showScreen('step1');
-    } else {
-      alert("Рахунок не знайдено!");
-    }
-  } catch (e) {
-    alert("Помилка зв'язку!");
-  }
-  btn.innerText = "Знайти";
+    } else alert("Рахунок не знайдено!");
+  } catch (e) { alert("Помилка зв'язку!"); }
+  btn.innerText = "Знайти рахунок";
 }
 
-function fillDataForStep1(data) {
-  let address = `${data.city}, ${data.street}, ${data.house}`;
-  if(data.flat) address += ` кв.${data.flat}`;
+function fillDataForStep1(d) {
+  let address = d.street || "";
+  if(d.house) address += " буд. " + d.house;
+  if(d.flat) address += " кв. " + d.flat;
   
-  document.getElementById("viewAcc1").innerText = data.account;
-  document.getElementById("viewAcc2").innerText = data.account;
-  document.getElementById("viewPib1").innerText = data.pib;
+  document.getElementById("viewAcc1").innerText = d.account || "";
+  document.getElementById("viewAcc2").innerText = d.account || "";
+  document.getElementById("viewPib1").innerText = d.pib || "";
   document.getElementById("viewAddr1").innerText = address;
   
-  // Автозаповнення знятого лічильника
-  document.getElementById("remType").value = data.type || "";
-  document.getElementById("remNum").value = data.meter || "";
+  document.getElementById("remType").value = d.type || "";
+  document.getElementById("remNum").value = d.meter || "";
 }
 
 // ==========================================
@@ -312,77 +442,116 @@ function fillDataForStep1(data) {
 function showScreen(id) {
   ["searchBlock", "step1", "step2"].forEach(s => document.getElementById(s).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
+  window.scrollTo(0, 0);
 }
 function goHome() { 
-  // Очищення полів
-  document.querySelectorAll('input').forEach(inp => {
-    if(inp.id !== 'tab' && inp.id !== 'pass') inp.value = '';
-  });
+  document.querySelectorAll('#step1 input, #step2 input, #step1 textarea, #step2 textarea').forEach(inp => inp.value = '');
+  document.getElementById("account").value = "";
   showScreen('searchBlock'); 
+  updateOfflineCount();
 }
-function goToStep2() { showScreen('step2'); window.scrollTo(0, 0); }
-function goBackToStep1() { showScreen('step1'); window.scrollTo(0, 0); }
+function goToStep2() { showScreen('step2'); }
+function goBackToStep1() { showScreen('step1'); }
+
+// ==========================================
+// ПІДКАЗКИ ТИПІВ ЛІЧИЛЬНИКІВ
+// ==========================================
+function showMeterTypes(inputId, hintBoxId){
+  const box = document.getElementById(hintBoxId); 
+  const input = document.getElementById(inputId);
+  if(!box || !input) return;
+  box.innerHTML = "";
+  METER_TYPES.forEach(item => {
+    const div = document.createElement("div"); 
+    div.className = "meterTypeItem"; 
+    div.textContent = item;
+    div.onmousedown = function(e){ e.preventDefault(); input.value = item; box.classList.add("hidden"); };
+    box.appendChild(div);
+  });
+  box.classList.remove("hidden");
+}
+
+function filterMeterTypes(value, inputId, hintBoxId){
+  const box = document.getElementById(hintBoxId); 
+  const input = document.getElementById(inputId);
+  const q = String(value || "").trim().toLowerCase(); 
+  box.innerHTML = "";
+  let filtered = METER_TYPES.filter(item => item.toLowerCase().includes(q));
+  filtered.forEach(item => {
+    const div = document.createElement("div"); 
+    div.className = "meterTypeItem"; 
+    div.textContent = item;
+    div.onmousedown = function(e){ e.preventDefault(); input.value = item; box.classList.add("hidden"); };
+    box.appendChild(div);
+  });
+  if(filtered.length) box.classList.remove("hidden"); else box.classList.add("hidden");
+}
+
+document.addEventListener("click", function(e){
+  document.querySelectorAll(".meterTypeHints").forEach(box => {
+    if (!box.contains(e.target) && e.target.tagName !== "INPUT") box.classList.add("hidden");
+  });
+});
 
 // ==========================================
 // ЗБЕРЕЖЕННЯ (Онлайн / Офлайн)
 // ==========================================
 async function saveData() {
+  const getVal = (id) => document.getElementById(id).value.trim();
+
+  // Обробка дублікатів і регістру для пломб
+  const clean = (val) => val.replace(/[^A-Za-zА-Яа-яІіЇїЄєҐґ0-9]/g, "").toUpperCase();
+  const checkSeal = (remId, instId) => {
+    let r = clean(getVal(remId)), i = clean(getVal(instId));
+    return (r === i && r !== "") ? { rem: "", inst: i } : { rem: r, inst: i };
+  };
+
+  const l = checkSeal("remLichil", "instLichil"), f1 = checkSeal("remFasad1", "instFasad1"), f2 = checkSeal("remFasad2", "instFasad2");
+  const vkp = checkSeal("remVkp", "instVkp"), opt = checkSeal("remOptop", "instOptop");
+  const imp1 = checkSeal("remImp1", "instImp1"), imp2 = checkSeal("remImp2", "instImp2"), imp3 = checkSeal("remImp3", "instImp3");
+
   const payload = {
     worker: workerTab, account: currentAccount,
     
-    removedMeterType: document.getElementById("remType").value,
-    removedMeterNumber: document.getElementById("remNum").value,
-    removedT0: document.getElementById("remT0").value,
-    removedT1: document.getElementById("remT1").value,
-    removedT2: document.getElementById("remT2").value,
-    removedT3: document.getElementById("remT3").value,
-    removedLichil: document.getElementById("remLichil").value,
-    removedFasad1: document.getElementById("remFasad1").value,
-    removedFasad2: document.getElementById("remFasad2").value,
-    removedVkp: document.getElementById("remVkp").value,
+    removedMeterType: getVal("remType"), removedMeterNumber: getVal("remNum"),
+    removedT0: getVal("remT0"), removedT1: getVal("remT1"), removedT2: getVal("remT2"), removedT3: getVal("remT3"),
+    removedLichil: l.rem, removedFasad1: f1.rem, removedFasad2: f2.rem, removedVkp: vkp.rem,
+    removedOptop: opt.rem, removedImp1: imp1.rem, removedImp2: imp2.rem, removedImp3: imp3.rem,
+    removedOther: getVal("remOther"),
 
-    installedMeterType: document.getElementById("instType").value,
-    installedMeterNumber: document.getElementById("instNum").value,
-    installedT0: document.getElementById("instT0").value,
-    installedT1: document.getElementById("instT1").value,
-    installedT2: document.getElementById("instT2").value,
-    installedT3: document.getElementById("instT3").value,
-    installedLichil: document.getElementById("instLichil").value,
-    installedFasad1: document.getElementById("instFasad1").value,
-    installedFasad2: document.getElementById("instFasad2").value,
-    installedVkp: document.getElementById("instVkp").value,
-    installedOptop: document.getElementById("instOptop").value,
-    installedImp1: document.getElementById("instImp1").value,
-    installedImp2: document.getElementById("instImp2").value,
-    installedImp3: document.getElementById("instImp3").value
+    installedMeterType: getVal("instType"), installedMeterNumber: getVal("instNum"),
+    installedT0: getVal("instT0"), installedT1: getVal("instT1"), installedT2: getVal("instT2"), installedT3: getVal("instT3"),
+    installedLichil: l.inst, installedFasad1: f1.inst, installedFasad2: f2.inst, installedVkp: vkp.inst,
+    installedOptop: opt.inst, installedImp1: imp1.inst, installedImp2: imp2.inst, installedImp3: imp3.inst,
+    installedOther: getVal("instOther")
   };
 
   if (!navigator.onLine) {
-    // ЗБЕРІГАЄМО В ОФЛАЙН
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
     offlineData.push(payload);
     localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
-    alert("Відсутній інтернет! Дані збережено в пам'ять телефону.");
+    playSuccessSound();
+    alert("✅ Відсутній інтернет! Дані збережено в пам'ять телефону.");
     goHome();
     return;
   }
 
-  // ЗБЕРІГАЄМО ОНЛАЙН
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST', body: JSON.stringify({ action: "saveData", data: payload })
     }).then(r => r.json());
     
     if(res.success) {
+      playSuccessSound();
       alert("✅ Успішно збережено в базу!");
       goHome();
     }
   } catch (e) {
-    // Якщо під час відправки зник інтернет
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
     offlineData.push(payload);
     localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
-    alert("Помилка відправки! Дані збережено в ОФЛАЙН чергу.");
+    playSuccessSound();
+    alert("⚠️ Помилка відправки! Дані збережено в ОФЛАЙН чергу.");
     goHome();
   }
 }
@@ -391,11 +560,14 @@ async function saveData() {
 // СИНХРОНІЗАЦІЯ ОФЛАЙН ДАНИХ
 // ==========================================
 async function syncOfflineData() {
-  let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
-  if (offlineData.length === 0) return; // Немає що вивантажувати
-
-  console.log("Починаю вивантаження офлайн даних: " + offlineData.length + " шт.");
+  if(!navigator.onLine) return alert("❌ Для відправки потрібен інтернет!");
   
+  let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+  if (offlineData.length === 0) return;
+
+  const btn = document.getElementById('btnSync');
+  btn.innerText = "⏳ Відправка...";
+
   try {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST', body: JSON.stringify({ action: "saveDataBatch", items: offlineData })
@@ -403,28 +575,111 @@ async function syncOfflineData() {
 
     if (res.ok) {
       localStorage.removeItem('offlineDataPLC');
+      playSuccessSound();
       alert(`✅ Вивантажено ${res.saved} записів з офлайну!`);
+      updateOfflineCount();
     }
   } catch (e) {
-    console.error("Не вдалося синхронізувати", e);
+    alert("❌ Помилка синхронізації. Спробуйте пізніше.");
   }
+  btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
 }
 
 // ==========================================
-// СКАНЕР ШТРИХКОДІВ
+// ОРИГІНАЛЬНИЙ СКАНЕР ШТРИХКОДІВ (З зумом)
 // ==========================================
-function startScanner(targetInputId) {
-  currentScanTarget = targetInputId;
+let html5QrCode = null;
+let isTorchOn = false;
+let currentScanTargetId = ""; 
+let autoSearchAfterScan = false;
+
+async function setZoom(value) {
+  if (!html5QrCode) return;
+  try {
+    let track = null;
+    const videoElement = document.querySelector("#reader video");
+    if (videoElement && videoElement.srcObject) track = videoElement.srcObject.getVideoTracks()[0];
+    else if (typeof html5QrCode.getRunningTrack === 'function') track = html5QrCode.getRunningTrack();
+
+    if (!track) return;
+    const capabilities = track.getCapabilities();
+    if (!capabilities.zoom) return;
+
+    let zoomValue = Math.min(Math.max(value, capabilities.zoom.min || 1), capabilities.zoom.max || 1);
+    await track.applyConstraints({ advanced: [{ zoom: zoomValue }] });
+  } catch (err) {}
+}
+
+function toggleTorch() {
+  if (!html5QrCode) return;
+  try {
+    const track = document.querySelector("#reader video").srcObject.getVideoTracks()[0];
+    isTorchOn = !isTorchOn; 
+    track.applyConstraints({ advanced: [{ torch: isTorchOn }] })
+    .then(() => document.getElementById("torch-btn").style.background = isTorchOn ? "#4CAF50" : "#FFc107")
+    .catch(() => { isTorchOn = false; });
+  } catch(e) {}
+}
+
+function startScanner(targetFieldId, doSearch) {
+  currentScanTargetId = targetFieldId;
+  autoSearchAfterScan = doSearch;
   document.getElementById("scanner-wrapper").style.display = "flex";
-  
-  html5QrcodeScanner = new Html5Qrcode("reader");
-  html5QrcodeScanner.start(
-    { facingMode: "environment" }, 
-    { fps: 10, qrbox: { width: 250, height: 100 } },
-    (decodedText) => {
-      document.getElementById(currentScanTarget).value = decodedText;
-      stopScanner();
-    },
+
+  if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      let selectedDeviceId = devices[0].id;
+      for (let d of devices) {
+        let label = d.label.toLowerCase();
+        if ((label.includes("back") || label.includes("задн") || label.includes("environment")) && 
+            !label.includes("wide") && !label.includes("0.")) {
+          selectedDeviceId = d.id; break;
+        }
+      }
+
+      html5QrCode.start(
+        selectedDeviceId, 
+        { fps: 15, qrbox: { width: 300, height: 120 }, aspectRatio: 1.0 },
+        (decodedText) => {
+          document.getElementById("scanner-wrapper").classList.add("scan-success-flash");
+          playBeep(); 
+
+          let finalCode = (currentScanTargetId !== "account") ? parseMeterBarcode(decodedText) : decodedText;
+          document.getElementById(currentScanTargetId).value = finalCode;
+
+          setTimeout(() => {
+            stopScanner(); 
+            if (autoSearchAfterScan) search(); 
+          }, 300);
+        },
+        () => {} 
+      ).then(() => setTimeout(() => setZoom(2.5), 1200))
+       .catch(err => { stopScanner(); });
+    }
+  });
+}
+
+function stopScanner() {
+  document.getElementById("scanner-wrapper").classList.remove("scan-success-flash");
+  document.getElementById("scanner-wrapper").style.display = "none";
+  if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => {});
+  isTorchOn = false;
+  document.getElementById("torch-btn").style.background = "#FFc107";
+}
+
+function parseMeterBarcode(rawCode) {
+  let code = String(rawCode).trim();
+  if (code.length === 16 && (code.startsWith("21") || code.startsWith("23"))) return code.substring(4, 12);
+  if (code.length === 16 && code.startsWith("11001")) return code.substring(5, 12);
+  return code;
+}
+
+updateOfflineCount(); // Оновлення лічильника при старті
+</script>
+</body>
+</html>
     (err) => { /* ігноруємо помилки фокусу */ }
   ).catch(err => {
     alert("Помилка камери: " + err);
