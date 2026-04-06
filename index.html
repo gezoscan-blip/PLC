@@ -63,9 +63,8 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 .meterTypeHints { position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
 .meterTypeItem { padding: 12px; font-size: 16px; cursor: pointer; border-bottom: 1px solid #eee; background: #fff; }
 
-/* ПРОФЕСІЙНИЙ СКАНЕР (Вставлено твій оригінальний CSS) */
+/* ПРОФЕСІЙНИЙ СКАНЕР (Чистий оригінал) */
 #scanner-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; }
-.scan-success-flash { background: rgba(76, 175, 80, 0.8) !important; }
 #scanner-box { width: 95%; max-width: 400px; position: relative; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .close-scan-btn { position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #d32f2f; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 10001; }
 .torch-btn { position: absolute; top: -15px; left: -15px; width: 45px; height: 45px; background: #FFc107; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 10001; transition: background 0.2s; }
@@ -236,7 +235,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAPCinbeK_S7OFgUweHar_eQQ-2Ct8IVKV8EWhxYCuSZCwo6053nEy-0fktWaSlMDxnA/exec"; 
+const SCRIPT_URL = "ТУТ_ВСТАВИТИ_ПОСИЛАННЯ_НА_ВЕБДОДАТОК"; 
 
 const METER_TYPES = [
   "НІК 2102-02.М2В", "NIK2104 AP2T.1802.MC.11", "СОЭ-1.02/2", "СОЭ-1.02/2Т", "ЛЕО", "СО-ЭА10Д", "AD11A.1-5-1", 
@@ -658,14 +657,13 @@ async function syncOfflineData() {
 }
 
 // ==========================================
-// ТВІЙ ОРИГІНАЛЬНИЙ СКАНЕР ШТРИХКОДІВ (З зумом)
+// ТВІЙ ОРИГІНАЛЬНИЙ СКАНЕР ШТРИХКОДІВ
 // ==========================================
 let html5QrCode = null;
 let isTorchOn = false;
 let currentScanTargetId = ""; 
 let autoSearchAfterScan = false;
 
-// 1. ФУНКЦІЯ ЗУМУ (Виправлена)
 async function setZoom(value) {
   if (!html5QrCode) return;
   try {
@@ -676,42 +674,34 @@ async function setZoom(value) {
     } else if (typeof html5QrCode.getRunningTrack === 'function') {
       track = html5QrCode.getRunningTrack();
     }
-
     if (!track) return;
     const capabilities = track.getCapabilities();
     if (!capabilities.zoom) return;
-
     const min = capabilities.zoom.min || 1;
     const max = capabilities.zoom.max || 1;
     let zoomValue = Math.min(Math.max(value, min), max);
-
     await track.applyConstraints({ advanced: [{ zoom: zoomValue }] });
-  } catch (err) { console.error("Помилка зуму:", err); }
+  } catch (err) {}
 }
 
-// 2. ФУНКЦІЯ ЛІХТАРИКА
 function toggleTorch() {
   if (!html5QrCode) return;
   try {
-    const video = document.querySelector("#reader video");
-    const track = video.srcObject.getVideoTracks()[0];
+    const track = document.querySelector("#reader video").srcObject.getVideoTracks()[0];
     isTorchOn = !isTorchOn; 
     track.applyConstraints({ advanced: [{ torch: isTorchOn }] })
     .then(() => {
       document.getElementById("torch-btn").style.background = isTorchOn ? "#4CAF50" : "#FFc107";
-    }).catch(() => { alert("Ліхтарик не підтримується."); isTorchOn = false; });
-  } catch(e) { console.log(e); }
+    }).catch(() => { isTorchOn = false; });
+  } catch(e) {}
 }
 
-// 3. ЗАПУСК СКАНЕРА
 function startScanner(targetFieldId, doSearch) {
   currentScanTargetId = targetFieldId;
   autoSearchAfterScan = doSearch;
   document.getElementById("scanner-wrapper").style.display = "flex";
 
-  if (!html5QrCode) {
-    html5QrCode = new Html5Qrcode("reader");
-  }
+  if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
   Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
@@ -725,27 +715,23 @@ function startScanner(targetFieldId, doSearch) {
         }
       }
 
+      // ТВОЇ ОРИГІНАЛЬНІ НАЛАШТУВАННЯ: fps 10, прямокутний бокс 250х100
       html5QrCode.start(
         selectedDeviceId, 
-        { fps: 15, qrbox: { width: 300, height: 120 }, aspectRatio: 1.0 },
+        { fps: 10, qrbox: { width: 250, height: 100 } },
         (decodedText) => {
-          // 1. ВМИКАЄМО ЗЕЛЕНІ КУТОЧКИ (додаємо клас до батьківського елемента)
-          const wrapper = document.getElementById("scanner-wrapper");
-          if (wrapper) wrapper.classList.add("scan-success-flash");
-
-          playBeep(); 
+          playBeep(); // Тільки звук, без зеленої заливки екрану!
 
           let finalCode = (currentScanTargetId !== "account") ? parseMeterBarcode(decodedText) : decodedText;
           document.getElementById(currentScanTargetId).value = finalCode;
 
           setTimeout(() => {
-            stopScanner(); // Це автоматично прибере підсвітку
+            stopScanner(); 
             if (autoSearchAfterScan) search(); 
           }, 300);
         },
         () => {} 
       ).then(() => {
-        // Ставимо початковий зум через 1.2 сек
         setTimeout(() => setZoom(2.5), 1200);
       }).catch(err => {
         alert("Помилка камери: " + err);
@@ -755,21 +741,14 @@ function startScanner(targetFieldId, doSearch) {
   }).catch(() => { alert("Немає доступу до камери."); stopScanner(); });
 }
 
-// 4. ЗУПИНКА
 function stopScanner() {
-  const wrapper = document.getElementById("scanner-wrapper");
-  if (wrapper) wrapper.classList.remove("scan-success-flash"); // Скидаємо колір куточкі
-
   document.getElementById("scanner-wrapper").style.display = "none";
-  if (html5QrCode) {
-    html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => console.log(e));
-  }
+  if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => console.log(e));
   isTorchOn = false;
   const tBtn = document.getElementById("torch-btn");
   if(tBtn) tBtn.style.background = "#FFc107";
 }
 
-// 5. ФІЛЬТР ШТРИХКОДІВ (ВАША ЛОГІКА)
 function parseMeterBarcode(rawCode) {
   let code = String(rawCode).trim();
   if (code.length === 16 && (code.startsWith("2100") ||code.startsWith("2104") || code.startsWith("2102") || code.startsWith("2300") || code.startsWith("2301") || code.startsWith("2303") || code.startsWith("2307") || code.startsWith("2102"))) {
