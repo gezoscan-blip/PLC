@@ -63,16 +63,18 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 .meterTypeHints { position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
 .meterTypeItem { padding: 12px; font-size: 16px; cursor: pointer; border-bottom: 1px solid #eee; background: #fff; }
 
-/* ПРОФЕСІЙНИЙ СКАНЕР */
-#scanner-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; transition: background 0.1s; }
+/* ПРОФЕСІЙНИЙ СКАНЕР (Вставлено твій оригінальний CSS) */
+#scanner-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; }
 .scan-success-flash { background: rgba(76, 175, 80, 0.8) !important; }
 #scanner-box { width: 95%; max-width: 400px; position: relative; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.close-scan-btn { position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #d32f2f; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10001; margin:0; padding:0; }
-.torch-btn { position: absolute; top: -15px; left: -15px; width: 45px; height: 45px; background: #FFc107; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10001; margin:0; padding:0; transition: background 0.2s; }
+.close-scan-btn { position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #d32f2f; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 10001; }
+.torch-btn { position: absolute; top: -15px; left: -15px; width: 45px; height: 45px; background: #FFc107; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 10001; transition: background 0.2s; }
+#scan-hint { color: white; margin-top: 20px; font-size: 16px; text-align: center; }
 
-/* ОФЛАЙН ПЛАШКА */
+/* ОФЛАЙН ПЛАШКА ТА ПОВІДОМЛЕННЯ ПРО ЗБЕРЕЖЕННЯ */
 #offlineBanner { position: fixed; bottom: 0; left: 0; width: 100%; background: #d32f2f; color: white; text-align: center; padding: 10px; font-weight: bold; display: none; z-index: 9999; }
 #offlineBanner.show { display: block; }
+#saveHint { text-align: center; margin-top: 10px; color: green; font-weight: bold; font-size: 18px; }
 </style>
 </head>
 <body>
@@ -112,7 +114,6 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
     </div>
     <button class="actionBtn" onclick="search()" id="btnSearch">Знайти рахунок</button>
     
-    <!-- КНОПКА ОФЛАЙН СИНХРОНІЗАЦІЇ -->
     <button class="btn-sync hidden" id="btnSync" onclick="syncOfflineData()">
       📤 Незавантажені дані: <span id="offlineCount">0</span>
     </button>
@@ -208,12 +209,13 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <div class="meterBox"><label>T3</label><input id="instT3" inputmode="numeric"></div>
     </div>
 
-    <button class="btn-save" onclick="saveData()">💾 Зберегти</button>
+    <button class="btn-save" id="btnSaveMain" onclick="saveData()">💾 Зберегти</button>
+    <div id="saveHint"></div>
     <button class="btn-back" onclick="goBackToStep1()">🔙 Назад</button>
   </div>
 </div>
 
-<!-- СКАНЕР -->
+<!-- СКАНЕР (Вставлено твій оригінальний JS-код нижче) -->
 <div id="scanner-wrapper">
   <div id="scanner-box">
     <button class="close-scan-btn" onclick="stopScanner()">✖</button>
@@ -225,6 +227,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <button onclick="setZoom(4)" style="width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid white; color: white; font-weight: bold; padding: 0;">4x</button>
     </div>
   </div>
+  <div id="scan-hint">Наведіть камеру на штрихкод.</div>
 </div>
 
 <div id="offlineBanner">🚫 Немає інтернету. Робота в Офлайн режимі.</div>
@@ -233,7 +236,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKIrVwUz_2D9T7pzzYUqn9PVYYj5sYtt11XlcdgmCfsprKp4qA_yXwvX6qjcizt0sqrQ/exec"; 
+const SCRIPT_URL = "ТУТ_ВСТАВИТИ_ПОСИЛАННЯ_НА_ВЕБДОДАТОК"; 
 
 const METER_TYPES = [
   "НІК 2102-02.М2В", "NIK2104 AP2T.1802.MC.11", "СОЭ-1.02/2", "СОЭ-1.02/2Т", "ЛЕО", "СО-ЭА10Д", "AD11A.1-5-1", 
@@ -264,7 +267,17 @@ const METER_TYPES = [
 let workerTab = ""; let workerName = ""; let currentAccount = "";
 
 // ==========================================
-// РОЗПІЗНАВАННЯ ПЛОМБ З БАЗИ ГУГЛА
+// АВТОМАТИЧНИЙ ВХІД / ПАМ'ЯТЬ ПАРОЛІВ
+// ==========================================
+window.onload = function() {
+  const savedTab = localStorage.getItem("workerTab");
+  const savedPass = localStorage.getItem("workerPass");
+  if (savedTab) document.getElementById("tab").value = savedTab;
+  if (savedPass) document.getElementById("pass").value = savedPass;
+};
+
+// ==========================================
+// РОЗПІЗНАВАННЯ ПЛОМБ
 // ==========================================
 function cleanPlomb(text) {
   if (!text) return "";
@@ -301,9 +314,7 @@ function parsePlombs(plombText){
       }
       else { result.other.push(plombNum); }
     });
-  } else {
-    result.other.push(text);
-  }
+  } else { result.other.push(text); }
   result.other = result.other.join("\n");
   return result;
 }
@@ -339,7 +350,7 @@ function playSuccessSound() {
 }
 
 // ==========================================
-// ОФЛАЙН ЛОГІКА І ЛІЧИЛЬНИК
+// ОФЛАЙН ЛОГІКА
 // ==========================================
 window.addEventListener('online', () => {
   document.getElementById('offlineBanner').classList.remove('show');
@@ -354,11 +365,9 @@ function updateOfflineCount() {
   let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
   const btn = document.getElementById('btnSync');
   document.getElementById('offlineCount').innerText = offlineData.length;
-  
   if(offlineData.length > 0) {
     btn.classList.remove('hidden');
-    if(navigator.onLine) btn.style.background = "#4CAF50"; 
-    else btn.style.background = "#d32f2f"; 
+    btn.style.background = navigator.onLine ? "#4CAF50" : "#d32f2f"; 
   } else {
     btn.classList.add('hidden');
   }
@@ -382,8 +391,8 @@ loginInputs.forEach(input => {
 // ВХІД
 // ==========================================
 async function doLogin() {
-  const tab = document.getElementById("tab").value;
-  const pass = document.getElementById("pass").value;
+  const tab = document.getElementById("tab").value.trim();
+  const pass = document.getElementById("pass").value.trim();
   if (!tab || !pass) return alert("Введіть дані!");
   
   const btn = document.getElementById("btnLogin");
@@ -391,7 +400,7 @@ async function doLogin() {
 
   if (!navigator.onLine) {
     const savedName = localStorage.getItem("workerName");
-    if(savedName) {
+    if(savedName && localStorage.getItem("workerTab") === tab) {
       workerTab = tab; workerName = savedName;
       document.getElementById("currentUserTab").innerText = workerTab;
       document.getElementById("currentUser").innerText = workerName;
@@ -401,7 +410,7 @@ async function doLogin() {
       return;
     } else {
       btn.innerText = "Увійти";
-      return alert("Немає інтернету для перевірки пароля!");
+      return alert("Немає інтернету для першої перевірки пароля!");
     }
   }
 
@@ -412,6 +421,8 @@ async function doLogin() {
 
     if (res.success) {
       workerTab = tab; workerName = res.name;
+      localStorage.setItem("workerTab", tab); 
+      localStorage.setItem("workerPass", pass); 
       localStorage.setItem("workerName", res.name); 
       document.getElementById("currentUserTab").innerText = workerTab;
       document.getElementById("currentUser").innerText = workerName;
@@ -424,10 +435,10 @@ async function doLogin() {
 }
 
 // ==========================================
-// ПОШУК І ЗАПОВНЕННЯ (з пломбами!)
+// ПОШУК І ЗАПОВНЕННЯ 
 // ==========================================
 async function search() {
-  const acc = document.getElementById("account").value;
+  const acc = document.getElementById("account").value.trim();
   if (!acc) return alert("Введіть рахунок!");
   
   if (!navigator.onLine) {
@@ -467,7 +478,6 @@ function fillDataForStep1(d) {
   document.getElementById("remType").value = d.type || "";
   document.getElementById("remNum").value = d.meter || "";
 
-  // ПАРСИНГ ПЛОМБ!
   const plombs = parsePlombs(d.plomb || "");
   document.getElementById("remLichil").value = plombs.lichil;
   document.getElementById("remOptop").value = plombs.optop;
@@ -479,14 +489,13 @@ function fillDataForStep1(d) {
   document.getElementById("remImp3").value = plombs.imp[2];
   document.getElementById("remOther").value = plombs.other;
 
-  // Автоматично збільшуємо поле "Інше" якщо багато тексту
   const ta = document.getElementById("remOther");
   ta.style.height = "auto";
   ta.style.height = ta.scrollHeight + "px";
 }
 
 // ==========================================
-// НАВІГАЦІЯ
+// НАВІГАЦІЯ ТА ЗНАЧЕННЯ ЗА ЗАМОВЧУВАННЯМ
 // ==========================================
 function showScreen(id) {
   ["searchBlock", "step1", "step2"].forEach(s => document.getElementById(s).classList.add("hidden"));
@@ -496,10 +505,19 @@ function showScreen(id) {
 function goHome() { 
   document.querySelectorAll('#step1 input, #step2 input, #step1 textarea, #step2 textarea').forEach(inp => inp.value = '');
   document.getElementById("account").value = "";
+  document.getElementById("saveHint").innerText = "";
   showScreen('searchBlock'); 
   updateOfflineCount();
 }
-function goToStep2() { showScreen('step2'); }
+function goToStep2() { 
+  showScreen('step2'); 
+  
+  // АВТОМАТИЧНІ ЗНАЧЕННЯ ДЛЯ ВСТАНОВЛЕНОГО ЛІЧИЛЬНИКА
+  document.getElementById("instType").value = "NIK2104 AP2T.1802.MC.11";
+  document.getElementById("instT0").value = "000000";
+  document.getElementById("instT1").value = "000000";
+  document.getElementById("instT2").value = "000000";
+}
 function goBackToStep1() { showScreen('step1'); }
 
 // ==========================================
@@ -511,31 +529,23 @@ function showMeterTypes(inputId, hintBoxId){
   if(!box || !input) return;
   box.innerHTML = "";
   METER_TYPES.forEach(item => {
-    const div = document.createElement("div"); 
-    div.className = "meterTypeItem"; 
-    div.textContent = item;
+    const div = document.createElement("div"); div.className = "meterTypeItem"; div.textContent = item;
     div.onmousedown = function(e){ e.preventDefault(); input.value = item; box.classList.add("hidden"); };
     box.appendChild(div);
   });
   box.classList.remove("hidden");
 }
-
 function filterMeterTypes(value, inputId, hintBoxId){
-  const box = document.getElementById(hintBoxId); 
-  const input = document.getElementById(inputId);
-  const q = String(value || "").trim().toLowerCase(); 
-  box.innerHTML = "";
+  const box = document.getElementById(hintBoxId); const input = document.getElementById(inputId);
+  const q = String(value || "").trim().toLowerCase(); box.innerHTML = "";
   let filtered = METER_TYPES.filter(item => item.toLowerCase().includes(q));
   filtered.forEach(item => {
-    const div = document.createElement("div"); 
-    div.className = "meterTypeItem"; 
-    div.textContent = item;
+    const div = document.createElement("div"); div.className = "meterTypeItem"; div.textContent = item;
     div.onmousedown = function(e){ e.preventDefault(); input.value = item; box.classList.add("hidden"); };
     box.appendChild(div);
   });
   if(filtered.length) box.classList.remove("hidden"); else box.classList.add("hidden");
 }
-
 document.addEventListener("click", function(e){
   document.querySelectorAll(".meterTypeHints").forEach(box => {
     if (!box.contains(e.target) && e.target.tagName !== "INPUT") box.classList.add("hidden");
@@ -543,7 +553,7 @@ document.addEventListener("click", function(e){
 });
 
 // ==========================================
-// ЗБЕРЕЖЕННЯ
+// ЗБЕРЕЖЕННЯ ІЗ ВІЗУАЛЬНИМ СПОВІЩЕННЯМ (БЕЗ ALERT)
 // ==========================================
 async function saveData() {
   const getVal = (id) => document.getElementById(id).value.trim();
@@ -559,7 +569,9 @@ async function saveData() {
   const imp1 = checkSeal("remImp1", "instImp1"), imp2 = checkSeal("remImp2", "instImp2"), imp3 = checkSeal("remImp3", "instImp3");
 
   const payload = {
-    worker: workerTab, account: currentAccount,
+    worker: workerTab, 
+    pass: localStorage.getItem("workerPass"), // <-- Передаємо ПІН для перевірки на сервері
+    account: currentAccount,
     
     removedMeterType: getVal("remType"), removedMeterNumber: getVal("remNum"),
     removedT0: getVal("remT0"), removedT1: getVal("remT1"), removedT2: getVal("remT2"), removedT3: getVal("remT3"),
@@ -574,13 +586,18 @@ async function saveData() {
     installedOther: getVal("instOther")
   };
 
+  const btn = document.getElementById("btnSaveMain");
+  const hint = document.getElementById("saveHint");
+  btn.style.display = "none";
+  hint.innerText = "⏳ Збереження...";
+
   if (!navigator.onLine) {
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
     offlineData.push(payload);
     localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
     playSuccessSound();
-    alert("✅ Відсутній інтернет! Дані збережено в пам'ять телефону.");
-    goHome();
+    hint.innerText = "✅ Збережено ОФЛАЙН!";
+    setTimeout(() => { btn.style.display = "block"; goHome(); }, 1500);
     return;
   }
 
@@ -591,16 +608,20 @@ async function saveData() {
     
     if(res.success) {
       playSuccessSound();
-      alert("✅ Успішно збережено в базу!");
-      goHome();
+      hint.innerText = "✅ Дані успішно збережено!";
+      setTimeout(() => { btn.style.display = "block"; goHome(); }, 1500);
+    } else {
+      btn.style.display = "block";
+      hint.innerText = "";
+      alert(res.message); // Якщо видалили з бази - виведе помилку
     }
   } catch (e) {
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
     offlineData.push(payload);
     localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
     playSuccessSound();
-    alert("⚠️ Помилка відправки! Дані збережено в ОФЛАЙН чергу.");
-    goHome();
+    hint.innerText = "⚠️ Немає зв'язку. Збережено ОФЛАЙН!";
+    setTimeout(() => { btn.style.display = "block"; goHome(); }, 1500);
   }
 }
 
@@ -626,55 +647,71 @@ async function syncOfflineData() {
       playSuccessSound();
       alert(`✅ Вивантажено ${res.saved} записів з офлайну!`);
       updateOfflineCount();
+    } else {
+      alert("⚠️ Помилка синхронізації: " + (res.message || ""));
+      btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
     }
   } catch (e) {
     alert("❌ Помилка синхронізації. Спробуйте пізніше.");
+    btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
   }
-  btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
 }
 
 // ==========================================
-// СКАНЕР ШТРИХКОДІВ (Із зумом)
+// ТВІЙ ОРИГІНАЛЬНИЙ СКАНЕР ШТРИХКОДІВ (З зумом)
 // ==========================================
 let html5QrCode = null;
 let isTorchOn = false;
 let currentScanTargetId = ""; 
 let autoSearchAfterScan = false;
 
+// 1. ФУНКЦІЯ ЗУМУ (Виправлена)
 async function setZoom(value) {
   if (!html5QrCode) return;
   try {
     let track = null;
     const videoElement = document.querySelector("#reader video");
-    if (videoElement && videoElement.srcObject) track = videoElement.srcObject.getVideoTracks()[0];
-    else if (typeof html5QrCode.getRunningTrack === 'function') track = html5QrCode.getRunningTrack();
+    if (videoElement && videoElement.srcObject) {
+      track = videoElement.srcObject.getVideoTracks()[0];
+    } else if (typeof html5QrCode.getRunningTrack === 'function') {
+      track = html5QrCode.getRunningTrack();
+    }
 
     if (!track) return;
     const capabilities = track.getCapabilities();
     if (!capabilities.zoom) return;
 
-    let zoomValue = Math.min(Math.max(value, capabilities.zoom.min || 1), capabilities.zoom.max || 1);
+    const min = capabilities.zoom.min || 1;
+    const max = capabilities.zoom.max || 1;
+    let zoomValue = Math.min(Math.max(value, min), max);
+
     await track.applyConstraints({ advanced: [{ zoom: zoomValue }] });
-  } catch (err) {}
+  } catch (err) { console.error("Помилка зуму:", err); }
 }
 
+// 2. ФУНКЦІЯ ЛІХТАРИКА
 function toggleTorch() {
   if (!html5QrCode) return;
   try {
-    const track = document.querySelector("#reader video").srcObject.getVideoTracks()[0];
+    const video = document.querySelector("#reader video");
+    const track = video.srcObject.getVideoTracks()[0];
     isTorchOn = !isTorchOn; 
     track.applyConstraints({ advanced: [{ torch: isTorchOn }] })
-    .then(() => document.getElementById("torch-btn").style.background = isTorchOn ? "#4CAF50" : "#FFc107")
-    .catch(() => { isTorchOn = false; });
-  } catch(e) {}
+    .then(() => {
+      document.getElementById("torch-btn").style.background = isTorchOn ? "#4CAF50" : "#FFc107";
+    }).catch(() => { alert("Ліхтарик не підтримується."); isTorchOn = false; });
+  } catch(e) { console.log(e); }
 }
 
+// 3. ЗАПУСК СКАНЕРА
 function startScanner(targetFieldId, doSearch) {
   currentScanTargetId = targetFieldId;
   autoSearchAfterScan = doSearch;
   document.getElementById("scanner-wrapper").style.display = "flex";
 
-  if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+  if (!html5QrCode) {
+    html5QrCode = new Html5Qrcode("reader");
+  }
 
   Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
@@ -683,7 +720,8 @@ function startScanner(targetFieldId, doSearch) {
         let label = d.label.toLowerCase();
         if ((label.includes("back") || label.includes("задн") || label.includes("environment")) && 
             !label.includes("wide") && !label.includes("0.")) {
-          selectedDeviceId = d.id; break;
+          selectedDeviceId = d.id;
+          break;
         }
       }
 
@@ -691,36 +729,55 @@ function startScanner(targetFieldId, doSearch) {
         selectedDeviceId, 
         { fps: 15, qrbox: { width: 300, height: 120 }, aspectRatio: 1.0 },
         (decodedText) => {
-          document.getElementById("scanner-wrapper").classList.add("scan-success-flash");
+          // 1. ВМИКАЄМО ЗЕЛЕНІ КУТОЧКИ (додаємо клас до батьківського елемента)
+          const wrapper = document.getElementById("scanner-wrapper");
+          if (wrapper) wrapper.classList.add("scan-success-flash");
+
           playBeep(); 
 
           let finalCode = (currentScanTargetId !== "account") ? parseMeterBarcode(decodedText) : decodedText;
           document.getElementById(currentScanTargetId).value = finalCode;
 
           setTimeout(() => {
-            stopScanner(); 
+            stopScanner(); // Це автоматично прибере підсвітку
             if (autoSearchAfterScan) search(); 
           }, 300);
         },
         () => {} 
-      ).then(() => setTimeout(() => setZoom(2.5), 1200))
-       .catch(err => { stopScanner(); });
+      ).then(() => {
+        // Ставимо початковий зум через 1.2 сек
+        setTimeout(() => setZoom(2.5), 1200);
+      }).catch(err => {
+        alert("Помилка камери: " + err);
+        stopScanner();
+      });
     }
-  });
+  }).catch(() => { alert("Немає доступу до камери."); stopScanner(); });
 }
 
+// 4. ЗУПИНКА
 function stopScanner() {
-  document.getElementById("scanner-wrapper").classList.remove("scan-success-flash");
+  const wrapper = document.getElementById("scanner-wrapper");
+  if (wrapper) wrapper.classList.remove("scan-success-flash"); // Скидаємо колір куточкі
+
   document.getElementById("scanner-wrapper").style.display = "none";
-  if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => {});
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => console.log(e));
+  }
   isTorchOn = false;
-  document.getElementById("torch-btn").style.background = "#FFc107";
+  const tBtn = document.getElementById("torch-btn");
+  if(tBtn) tBtn.style.background = "#FFc107";
 }
 
+// 5. ФІЛЬТР ШТРИХКОДІВ (ВАША ЛОГІКА)
 function parseMeterBarcode(rawCode) {
   let code = String(rawCode).trim();
-  if (code.length === 16 && (code.startsWith("21") || code.startsWith("23"))) return code.substring(4, 12);
-  if (code.length === 16 && code.startsWith("11001")) return code.substring(5, 12);
+  if (code.length === 16 && (code.startsWith("2100") ||code.startsWith("2104") || code.startsWith("2102") || code.startsWith("2300") || code.startsWith("2301") || code.startsWith("2303") || code.startsWith("2307") || code.startsWith("2102"))) {
+    return code.substring(4, 12);
+  }
+  if (code.length === 16 && code.startsWith("11001")) {
+    return code.substring(5, 12);
+  }
   return code;
 }
 
