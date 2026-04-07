@@ -35,6 +35,7 @@ button:active { transform: scale(0.97); }
 .btn-back { background: #9E9E9E; }
 .btn-next { background: #FF9800; }
 .btn-sync { background: #d32f2f; margin-top: 15px; }
+.btn-plomb { background: #607D8B; }
 
 /* ІНПУТИ ТА СКАНЕР */
 input, textarea { width: 100%; min-height: 44px; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; box-sizing: border-box; font-weight: bold; margin: 0; }
@@ -65,12 +66,18 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 .meterBox label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #444; }
 .meterBox input { text-align: center; font-size: 16px; padding: 8px 2px; min-height: 44px; }
 
-/* ПІДКАЗКИ ТИПІВ ЛІЧИЛЬНИКІВ */
+/* ПІДКАЗКИ ТИПІВ ЛІЧИЛЬНИКІВ ТА ПЛОМБ */
 .meterTypeBox { position: relative; }
-.meterTypeHints { position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.meterTypeHints, .plombHints { position: absolute; left: 0; right: 0; top: 100%; margin-top: 2px; background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
 .meterTypeItem { padding: 12px; font-size: 16px; cursor: pointer; border-bottom: 1px solid #eee; background: #fff; }
+.meterTypeItem:active { background: #f0f0f0; }
 
-/* ПРОФЕСІЙНИЙ СКАНЕР (Чистий оригінал) */
+/* МОДАЛЬНЕ ВІКНО ПЛОМБ */
+#plombsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.plomb-card { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; }
+.plomb-list { max-height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0; text-align: left; font-size: 14px; color: #555; }
+
+/* ПРОФЕСІЙНИЙ СКАНЕР */
 #scanner-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; }
 #scanner-box { width: 95%; max-width: 400px; position: relative; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .close-scan-btn { position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #d32f2f; color: white; border-radius: 50%; font-size: 22px; font-weight: bold; border: 3px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; z-index: 10001; }
@@ -120,6 +127,8 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
     </div>
     <button class="actionBtn" onclick="search()" id="btnSearch">Знайти рахунок</button>
     
+    <button class="btn-plomb" onclick="openPlombsModal()">🧰 Мої пломби (<span id="plombsCountBtn">0</span>)</button>
+
     <button class="btn-sync hidden" id="btnSync" onclick="syncOfflineData()">
       📤 Незавантажені дані: <span id="offlineCount">0</span>
     </button>
@@ -196,14 +205,65 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
     <div class="sectionLine"></div>
 
     <div class="blockTitle">Встановлені пломби</div>
-    <div class="plombRow"><div class="plombPlace">Клемна кришка</div><div class="plombField"><input id="instLichil"></div></div>
-    <div class="plombRow"><div class="plombPlace">Шафа обліку 1</div><div class="plombField"><input id="instFasad1"></div></div>
-    <div class="plombRow"><div class="plombPlace">Шафа обліку 2</div><div class="plombField"><input id="instFasad2"></div></div>
-    <div class="plombRow"><div class="plombPlace">ВКП</div><div class="plombField"><input id="instVkp"></div></div>
-    <div class="plombRow"><div class="plombPlace">Оптопорт</div><div class="plombField"><input id="instOptop"></div></div>
-    <div class="plombRow"><div class="plombPlace">ІМП 1</div><div class="plombField"><input id="instImp1"></div></div>
-    <div class="plombRow"><div class="plombPlace">ІМП 2</div><div class="plombField"><input id="instImp2"></div></div>
-    <div class="plombRow"><div class="plombPlace">ІМП 3</div><div class="plombField"><input id="instImp3"></div></div>
+    
+    <!-- ТУТ ЗМІНИ: Додано relative контейнери та виклики підказок пломб -->
+    <div class="plombRow">
+      <div class="plombPlace">Клемна кришка</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instLichil" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">Шафа обліку 1</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instFasad1" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">Шафа обліку 2</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instFasad2" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">ВКП</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instVkp" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">Оптопорт</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instOptop" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">ІМП 1</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instImp1" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">ІМП 2</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instImp2" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    <div class="plombRow">
+      <div class="plombPlace">ІМП 3</div>
+      <div class="plombField" style="position: relative;">
+        <input id="instImp3" autocomplete="off" onfocus="showPlombHints(this)" oninput="filterPlombHints(this)">
+        <div class="plombHints hidden"></div>
+      </div>
+    </div>
+    
     <div style="margin-top: 15px;"><b>Інші встановлені:</b><textarea id="instOther"></textarea></div>
     <div class="sectionLine"></div>
 
@@ -221,7 +281,26 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
   </div>
 </div>
 
-<!-- СКАНЕР (Вставлено твій оригінальний JS-код нижче) -->
+<!-- МОДАЛЬНЕ ВІКНО КЕРУВАННЯ ПЛОМБАМИ -->
+<div id="plombsModal" class="hidden">
+  <div class="plomb-card">
+    <h3 style="margin-top:0;">🧰 Додати пломби</h3>
+    <div style="font-size: 14px; color:#555; margin-bottom:10px;">Введіть першу та останню пломбу з пачки (напр. С12001 та С12020)</div>
+    
+    <input id="plombStart" placeholder="Початкова пломба" style="margin-bottom: 10px;">
+    <input id="plombEnd" placeholder="Кінцева пломба" style="margin-bottom: 10px;">
+    <button class="actionBtn" onclick="generatePlombs()" style="min-height: 40px; margin-top: 0;">➕ Згенерувати</button>
+    
+    <div class="sectionLine"></div>
+    <div style="font-weight:bold;">Доступні пломби (<span id="plombsCountModal">0</span> шт):</div>
+    <div class="plomb-list" id="plombListDiv">Немає доданих пломб</div>
+    
+    <button onclick="clearPlombs()" style="background: #e53935; min-height: 40px; margin-top:5px; font-size: 16px;">🗑 Очистити всі</button>
+    <button class="btn-back" onclick="closePlombsModal()" style="min-height: 40px;">✖ Закрити</button>
+  </div>
+</div>
+
+<!-- СКАНЕР -->
 <div id="scanner-wrapper">
   <div id="scanner-box">
     <button class="close-scan-btn" onclick="stopScanner()">✖</button>
@@ -242,7 +321,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAPCinbeK_S7OFgUweHar_eQQ-2Ct8IVKV8EWhxYCuSZCwo6053nEy-0fktWaSlMDxnA/exec"; 
+const SCRIPT_URL = "ТУТ_ВСТАВИТИ_ПОСИЛАННЯ_НА_ВЕБДОДАТОК"; 
 
 const METER_TYPES = [
   "НІК 2102-02.М2В", "NIK2104 AP2T.1802.MC.11", "СОЭ-1.02/2", "СОЭ-1.02/2Т", "ЛЕО", "СО-ЭА10Д", "AD11A.1-5-1", 
@@ -272,18 +351,144 @@ const METER_TYPES = [
 
 let workerTab = ""; let workerName = ""; let currentAccount = "";
 
-// ==========================================
-// АВТОМАТИЧНИЙ ВХІД / ПАМ'ЯТЬ ПАРОЛІВ
-// ==========================================
 window.onload = function() {
   const savedTab = localStorage.getItem("workerTab");
   const savedPass = localStorage.getItem("workerPass");
   if (savedTab) document.getElementById("tab").value = savedTab;
   if (savedPass) document.getElementById("pass").value = savedPass;
+  updateMyPlombsUI();
 };
 
 // ==========================================
-// РОЗПІЗНАВАННЯ ПЛОМБ
+// ЛОГІКА: КЕРУВАННЯ ВЛАСНИМИ ПЛОМБАМИ
+// ==========================================
+function openPlombsModal() {
+  document.getElementById("plombsModal").classList.remove("hidden");
+  updateMyPlombsUI();
+}
+
+function closePlombsModal() {
+  document.getElementById("plombsModal").classList.add("hidden");
+  document.getElementById("plombStart").value = "";
+  document.getElementById("plombEnd").value = "";
+}
+
+function generatePlombs() {
+  let startRaw = document.getElementById("plombStart").value;
+  let endRaw = document.getElementById("plombEnd").value;
+  
+  let start = cleanPlomb(startRaw);
+  let end = cleanPlomb(endRaw);
+
+  if(!start || !end) return alert("Введіть обидві пломби!");
+
+  // Розділяємо букви і цифри (напр. K30108856 -> Prefix: K, Num: 30108856)
+  let matchStart = start.match(/^([A-ZА-ЯІЇЄҐ]*?)(\d+)$/);
+  let matchEnd = end.match(/^([A-ZА-ЯІЇЄҐ]*?)(\d+)$/);
+
+  if(!matchStart || !matchEnd) return alert("Формат має бути: Букви + Цифри (напр. С12345)");
+  if(matchStart[1] !== matchEnd[1]) return alert("Префікси (букви) пломб не співпадають!");
+
+  let prefix = matchStart[1];
+  let numStart = parseInt(matchStart[2], 10);
+  let numEnd = parseInt(matchEnd[2], 10);
+  let lengthStr = matchStart[2].length;
+
+  if(numStart > numEnd) return alert("Початковий номер більший за кінцевий!");
+  if(numEnd - numStart > 100) {
+    if(!confirm("Ви збираєтесь додати більше 100 пломб. Продовжити?")) return;
+  }
+
+  let myPlombs = JSON.parse(localStorage.getItem("myPlombs") || "[]");
+  let addedCount = 0;
+
+  for(let i = numStart; i <= numEnd; i++) {
+    let numStr = i.toString().padStart(lengthStr, '0');
+    let newPlomb = prefix + numStr;
+    if(!myPlombs.includes(newPlomb)) {
+      myPlombs.push(newPlomb);
+      addedCount++;
+    }
+  }
+
+  localStorage.setItem("myPlombs", JSON.stringify(myPlombs));
+  document.getElementById("plombStart").value = "";
+  document.getElementById("plombEnd").value = "";
+  updateMyPlombsUI();
+  
+  if(addedCount > 0) alert(`✅ Додано ${addedCount} нових пломб!`);
+  else alert("Ці пломби вже були у списку.");
+}
+
+function updateMyPlombsUI() {
+  let myPlombs = JSON.parse(localStorage.getItem("myPlombs") || "[]");
+  document.getElementById("plombsCountBtn").innerText = myPlombs.length;
+  document.getElementById("plombsCountModal").innerText = myPlombs.length;
+  
+  let listDiv = document.getElementById("plombListDiv");
+  if(myPlombs.length === 0) {
+    listDiv.innerHTML = "Немає доданих пломб.";
+  } else {
+    listDiv.innerHTML = myPlombs.join(", ");
+  }
+}
+
+function clearPlombs() {
+  if(confirm("Ви впевнені, що хочете видалити всі свої пломби з пам'яті?")) {
+    localStorage.removeItem("myPlombs");
+    updateMyPlombsUI();
+  }
+}
+
+// Випадаючий список пломб при фокусі на інпуті
+function showPlombHints(inputEl) {
+  let box = inputEl.nextElementSibling;
+  if(!box || !box.classList.contains("plombHints")) return;
+  
+  let myPlombs = JSON.parse(localStorage.getItem("myPlombs") || "[]");
+  box.innerHTML = "";
+  
+  myPlombs.forEach(p => {
+    let div = document.createElement("div"); 
+    div.className = "meterTypeItem"; 
+    div.textContent = p;
+    div.onmousedown = function(e){ e.preventDefault(); inputEl.value = p; box.classList.add("hidden"); };
+    box.appendChild(div);
+  });
+  if(myPlombs.length > 0) box.classList.remove("hidden");
+}
+
+function filterPlombHints(inputEl) {
+  let box = inputEl.nextElementSibling;
+  if(!box || !box.classList.contains("plombHints")) return;
+
+  let q = String(inputEl.value || "").trim().toLowerCase();
+  let myPlombs = JSON.parse(localStorage.getItem("myPlombs") || "[]");
+  
+  let filtered = myPlombs.filter(p => p.toLowerCase().includes(q));
+  box.innerHTML = "";
+  filtered.forEach(p => {
+    let div = document.createElement("div"); 
+    div.className = "meterTypeItem"; 
+    div.textContent = p;
+    div.onmousedown = function(e){ e.preventDefault(); inputEl.value = p; box.classList.add("hidden"); };
+    box.appendChild(div);
+  });
+  if(filtered.length > 0) box.classList.remove("hidden"); else box.classList.add("hidden");
+}
+
+// Автовидалення використаних пломб із кешу
+function removeUsedPlombs(usedArray) {
+  let myPlombs = JSON.parse(localStorage.getItem("myPlombs") || "[]");
+  let cleanedUsed = usedArray.map(p => cleanPlomb(p)).filter(p => p !== "");
+  
+  let newPlombsList = myPlombs.filter(p => !cleanedUsed.includes(p));
+  localStorage.setItem("myPlombs", JSON.stringify(newPlombsList));
+  updateMyPlombsUI();
+}
+
+// ==========================================
+// РОЗПІЗНАВАННЯ ПЛОМБ З БАЗИ (Для Кроку 1)
 // ==========================================
 function cleanPlomb(text) {
   if (!text) return "";
@@ -379,7 +584,6 @@ function updateOfflineCount() {
   }
 }
 
-// Анімація логіну
 const loginBox = document.getElementById("login");
 const loginInputs = loginBox.querySelectorAll("input");
 loginInputs.forEach(input => {
@@ -517,18 +721,23 @@ function goHome() {
 }
 function goToStep2() { 
   showScreen('step2'); 
-  
-  // АВТОМАТИЧНІ ЗНАЧЕННЯ ДЛЯ ВСТАНОВЛЕНОГО ЛІЧИЛЬНИКА
   document.getElementById("instType").value = "NIK2104 AP2T.1802.MC.11";
   document.getElementById("instT0").value = "000000";
   document.getElementById("instT1").value = "000000";
   document.getElementById("instT2").value = "000000";
+  document.getElementById("instT3").value = "000000";
 }
 function goBackToStep1() { showScreen('step1'); }
 
 // ==========================================
 // ПІДКАЗКИ ТИПІВ ЛІЧИЛЬНИКІВ
 // ==========================================
+document.addEventListener("click", function(e){
+  document.querySelectorAll(".meterTypeHints, .plombHints").forEach(box => {
+    if (!box.contains(e.target) && e.target.tagName !== "INPUT") box.classList.add("hidden");
+  });
+});
+
 function showMeterTypes(inputId, hintBoxId){
   const box = document.getElementById(hintBoxId); 
   const input = document.getElementById(inputId);
@@ -552,21 +761,15 @@ function filterMeterTypes(value, inputId, hintBoxId){
   });
   if(filtered.length) box.classList.remove("hidden"); else box.classList.add("hidden");
 }
-document.addEventListener("click", function(e){
-  document.querySelectorAll(".meterTypeHints").forEach(box => {
-    if (!box.contains(e.target) && e.target.tagName !== "INPUT") box.classList.add("hidden");
-  });
-});
 
 // ==========================================
-// ЗБЕРЕЖЕННЯ ІЗ ВІЗУАЛЬНИМ СПОВІЩЕННЯМ (БЕЗ ALERT)
+// ЗБЕРЕЖЕННЯ
 // ==========================================
 async function saveData() {
   const getVal = (id) => document.getElementById(id).value.trim();
 
-  const clean = (val) => val.replace(/[^A-Za-zА-Яа-яІіЇїЄєҐґ0-9]/g, "").toUpperCase();
   const checkSeal = (remId, instId) => {
-    let r = clean(getVal(remId)), i = clean(getVal(instId));
+    let r = cleanPlomb(getVal(remId)), i = cleanPlomb(getVal(instId));
     return (r === i && r !== "") ? { rem: "", inst: i } : { rem: r, inst: i };
   };
 
@@ -576,7 +779,7 @@ async function saveData() {
 
   const payload = {
     worker: workerTab, 
-    pass: localStorage.getItem("workerPass"), // <-- Передаємо ПІН для перевірки на сервері
+    pass: localStorage.getItem("workerPass"), 
     account: currentAccount,
     
     removedMeterType: getVal("remType"), removedMeterNumber: getVal("remNum"),
@@ -591,6 +794,9 @@ async function saveData() {
     installedOptop: opt.inst, installedImp1: imp1.inst, installedImp2: imp2.inst, installedImp3: imp3.inst,
     installedOther: getVal("instOther")
   };
+
+  // --- ВИДАЛЕННЯ ВИКОРИСТАНИХ ПЛОМБ ---
+  removeUsedPlombs([l.inst, f1.inst, f2.inst, vkp.inst, opt.inst, imp1.inst, imp2.inst, imp3.inst]);
 
   const btn = document.getElementById("btnSaveMain");
   const hint = document.getElementById("saveHint");
@@ -619,7 +825,7 @@ async function saveData() {
     } else {
       btn.style.display = "block";
       hint.innerText = "";
-      alert(res.message); // Якщо видалили з бази - виведе помилку
+      alert(res.message); 
     }
   } catch (e) {
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
@@ -664,7 +870,7 @@ async function syncOfflineData() {
 }
 
 // ==========================================
-// ТВІЙ ОРИГІНАЛЬНИЙ СКАНЕР ШТРИХКОДІВ
+// СКАНЕР ШТРИХКОДІВ
 // ==========================================
 let html5QrCode = null;
 let isTorchOn = false;
@@ -722,13 +928,11 @@ function startScanner(targetFieldId, doSearch) {
         }
       }
 
-      // ТВОЇ ОРИГІНАЛЬНІ НАЛАШТУВАННЯ: fps 10, прямокутний бокс 250х100
       html5QrCode.start(
         selectedDeviceId, 
         { fps: 10, qrbox: { width: 250, height: 100 } },
         (decodedText) => {
-          playBeep(); // Тільки звук, без зеленої заливки екрану!
-
+          playBeep(); 
           let finalCode = (currentScanTargetId !== "account") ? parseMeterBarcode(decodedText) : decodedText;
           document.getElementById(currentScanTargetId).value = finalCode;
 
@@ -767,7 +971,6 @@ function parseMeterBarcode(rawCode) {
   return code;
 }
 
-updateOfflineCount();
 </script>
 </body>
 </html>
