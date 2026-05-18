@@ -10,7 +10,7 @@
   
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Заміна лічильника PLC</title>
+<title>Заміна лічильника</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 /* ЗАГАЛЬНИЙ СТИЛЬ */
@@ -92,6 +92,24 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 #offlineBanner { position: fixed; bottom: 0; left: 0; width: 100%; background: #d32f2f; color: white; text-align: center; padding: 10px; font-weight: bold; display: none; z-index: 9999; }
 #offlineBanner.show { display: block; }
 #saveHint { text-align: center; margin-top: 10px; color: green; font-weight: bold; font-size: 18px; }
+
+/* ЖУРНАЛ ТА ОФЛАЙН-ПЕРЕГЛЯД */
+.btn-journal { background: #00897B; }
+#journalModal, #offlinePreviewModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: flex-end; justify-content: center; }
+.journal-card { background: #fff; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 16px; max-height: 80vh; display: flex; flex-direction: column; }
+.journal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.journal-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.journal-item { border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.journal-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.journal-acc { font-weight: bold; font-size: 15px; color: #1565c0; }
+.journal-time { font-size: 12px; color: #888; }
+.journal-pib { color: #333; margin-bottom: 3px; }
+.journal-meters { font-size: 12px; color: #555; }
+.badge-online { background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.badge-offline { background: #fff3e0; color: #e65100; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.offline-item { border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.offline-item-info { flex: 1; }
+.offline-delete-btn { flex: 0 0 auto; background: #ffebee; color: #c62828; border: none; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer; min-height: auto; width: auto; margin: 0; }
 </style>
 </head>
 <body>
@@ -137,7 +155,8 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <button class="btn-magnet" onclick="openPlombsModal('magnet')" style="margin-top:0;">🧲 Мої магніти (<span id="magnetsCountBtn">0</span>)</button>
     </div>
 
-    <button class="btn-sync hidden" id="btnSync" onclick="syncOfflineData()">
+    <button class="btn-journal" onclick="openJournalModal()" style="margin-top:10px; width:100%;">📋 Журнал за сьогодні (<span id="journalCount">0</span>)</button>
+    <button class="btn-sync hidden" id="btnSync" onclick="openOfflinePreview()">
       📤 Незавантажені дані: <span id="offlineCount">0</span>
     </button>
   </div>
@@ -158,7 +177,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       </div>
       <div class="fieldLabel">Заводський номер</div>
       <div class="input-with-scanner">
-        <input id="remNum">
+        <input id="remNum" inputmode="numeric">
         <button class="scan-btn-outer" onclick="startScanner('remNum', false)">
           <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
         </button>
@@ -204,7 +223,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       </div>
       <div class="fieldLabel">Заводський номер</div>
       <div class="input-with-scanner">
-        <input id="instNum">
+        <input id="instNum" inputmode="numeric">
         <button class="scan-btn-outer" onclick="startScanner('instNum', false)">
           <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
         </button>
@@ -324,11 +343,57 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 
 <div id="offlineBanner">🚫 Немає інтернету. Робота в Офлайн режимі.</div>
 
+<!-- ЖУРНАЛ ЗА ДЕНЬ -->
+<div id="journalModal" class="hidden">
+  <div class="journal-card">
+    <div class="journal-header">
+      <span style="font-size:17px; font-weight:bold;">📋 Журнал за сьогодні</span>
+      <button onclick="document.getElementById('journalModal').classList.add('hidden')" style="width:auto;min-height:auto;background:#eee;color:#333;padding:6px 14px;margin:0;font-size:14px;">✕ Закрити</button>
+    </div>
+    <div class="journal-list" id="journalList"></div>
+  </div>
+</div>
+
+<!-- ПЕРЕГЛЯД ОФЛАЙН ДАНИХ -->
+<div id="offlinePreviewModal" class="hidden">
+  <div class="journal-card">
+    <div class="journal-header">
+      <span style="font-size:17px; font-weight:bold;">📤 Незавантажені записи</span>
+      <button onclick="document.getElementById('offlinePreviewModal').classList.add('hidden')" style="width:auto;min-height:auto;background:#eee;color:#333;padding:6px 14px;margin:0;font-size:14px;">✕ Закрити</button>
+    </div>
+    <div class="journal-list" id="offlineList"></div>
+    <button class="btn-sync" style="margin-top:12px;" onclick="syncOfflineData()">📤 Відправити все</button>
+  </div>
+</div>
+
 <script>
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAPCinbeK_S7OFgUweHar_eQQ-2Ct8IVKV8EWhxYCuSZCwo6053nEy-0fktWaSlMDxnA/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvTmFzzaTUHBKMbyu-enw-kKJ3EyvDeTRW7Wxz2vaCOyf8yVKkL3HS9iYAsexR2itxRA/exec"; 
+
+// ==========================================
+// ОПТИМІЗОВАНИЙ МІСТ ДЛЯ ШВИДКОГО ЗВ'ЯЗКУ
+// ==========================================
+async function sendToGoogle(action, payloadData = {}) {
+  let formData = new URLSearchParams();
+  formData.append("payload", JSON.stringify({ action: action, ...payloadData }));
+
+  const response = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: formData,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  });
+
+  const text = await response.text(); // Спочатку читаємо як текст!
+  
+  try {
+    return JSON.parse(text); // Пробуємо перетворити в JSON
+  } catch (e) {
+    console.error("Відповідь Гугла не є JSON:", text);
+    throw new Error("Сервер Гугла завантажується, спробуйте ще раз.");
+  }
+}
 
 const METER_TYPES = [
   "НІК 2102-02.М2В", "NIK2104 AP2T.1802.MC.11", "СОЭ-1.02/2", "СОЭ-1.02/2Т", "ЛЕО", "СО-ЭА10Д", "AD11A.1-5-1", 
@@ -358,26 +423,57 @@ const METER_TYPES = [
 
 let workerTab = ""; let workerName = ""; let currentAccount = "";
 
+// ==========================================
+// АВТОМАТИЧНИЙ ВХІД + ФОНОВА ПЕРЕВІРКА БЕЗПЕКИ
+// ==========================================
 window.onload = function() {
   const savedTab = localStorage.getItem("workerTab");
   const savedPass = localStorage.getItem("workerPass");
-  if (savedTab) document.getElementById("tab").value = savedTab;
-  if (savedPass) document.getElementById("pass").value = savedPass;
+  const savedName = localStorage.getItem("workerName");
+
+  if (savedTab && savedPass && savedName) {
+    workerTab = savedTab;
+    workerName = savedName;
+    document.getElementById("currentUserTab").innerText = workerTab;
+    document.getElementById("currentUser").innerText = workerName;
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    updateOfflineCount();
+    updateJournalCount();
+
+    // ФОНОВА ПЕРЕВІРКА ДОСТУПУ!
+    if (navigator.onLine) {
+      sendToGoogle("login", { tab: savedTab, pass: savedPass }).then(res => {
+        if (!res.success) {
+          alert("Ваш доступ анульовано або пароль змінено!");
+          logout();
+        }
+      }).catch(e => {}); // ігноруємо помилки мережі
+    }
+  } else if (savedTab) {
+    document.getElementById("tab").value = savedTab;
+  }
+  
   updateCountersUI();
 };
+
+function logout() {
+  localStorage.removeItem("workerTab");
+  localStorage.removeItem("workerPass");
+  localStorage.removeItem("workerName");
+  location.reload();
+}
 
 // ==========================================
 // ЛОГІКА: КЕРУВАННЯ ВЛАСНИМИ ПЛОМБАМИ / МАГНІТАМИ
 // ==========================================
-let currentModalType = 'plomb'; // 'plomb' або 'magnet'
+let currentModalType = 'plomb';
 
 function openPlombsModal(type) {
   currentModalType = type;
   document.getElementById("plombsModal").classList.remove("hidden");
-  
   if (type === 'plomb') document.getElementById("modalTitle").innerText = "🧰 Додати пломби";
   else document.getElementById("modalTitle").innerText = "🧲 Додати магніти";
-  
   updateCountersUI();
 }
 
@@ -400,7 +496,7 @@ function generatePlombs() {
   let matchEnd = end.match(/^([A-ZА-ЯІЇЄҐ]*?)(\d+)$/);
 
   if(!matchStart || !matchEnd) return alert("Формат має бути: Букви + Цифри (напр. С12345)");
-  if(matchStart[1] !== matchEnd[1]) return alert("Префікси (букви) пломб не співпадають!");
+  if(matchStart[1] !== matchEnd[1]) return alert("Префікси (букви) не співпадають!");
 
   let prefix = matchStart[1];
   let numStart = parseInt(matchStart[2], 10);
@@ -409,7 +505,7 @@ function generatePlombs() {
 
   if(numStart > numEnd) return alert("Початковий номер більший за кінцевий!");
   if(numEnd - numStart > 100) {
-    if(!confirm("Ви збираєтесь додати більше 100 пломб. Продовжити?")) return;
+    if(!confirm("Ви збираєтесь додати більше 100 штук. Продовжити?")) return;
   }
 
   let storageKey = currentModalType === 'plomb' ? 'myPlombs' : 'myMagnets';
@@ -451,14 +547,13 @@ function updateCountersUI() {
 }
 
 function clearPlombs() {
-  if(confirm("Ви впевнені, що хочете видалити список?")) {
+  if(confirm("Ви впевнені, що хочете очистити цей список?")) {
     let storageKey = currentModalType === 'plomb' ? 'myPlombs' : 'myMagnets';
     localStorage.removeItem(storageKey);
     updateCountersUI();
   }
 }
 
-// Функція для визначення, які пломби зараз введені у поля
 function getCurrentlyUsed(type) {
   let used = [];
   let inputs = type === 'plomb' 
@@ -472,7 +567,6 @@ function getCurrentlyUsed(type) {
   return used;
 }
 
-// Випадаючий список пломб/магнітів
 function buildHints(inputEl, type, filterQuery = "") {
   let box = inputEl.nextElementSibling;
   if(!box || !box.classList.contains("plombHints")) return;
@@ -491,13 +585,16 @@ function buildHints(inputEl, type, filterQuery = "") {
     let div = document.createElement("div"); 
     div.className = "meterTypeItem"; 
     
-    // Якщо пломба вже десь введена - світимо червоним
     if(usedList.includes(p.toUpperCase())) {
       div.classList.add("used-plomb");
     }
 
     div.textContent = p;
-    div.onmousedown = function(e){ e.preventDefault(); inputEl.value = p; box.classList.add("hidden"); };
+    div.onmousedown = function(e){ 
+      e.preventDefault(); 
+      inputEl.value = p; 
+      box.classList.add("hidden"); 
+    };
     box.appendChild(div);
   });
   
@@ -508,7 +605,6 @@ function buildHints(inputEl, type, filterQuery = "") {
 function showPlombHints(inputEl, type) { buildHints(inputEl, type, ""); }
 function filterPlombHints(inputEl, type) { buildHints(inputEl, type, inputEl.value); }
 
-// Автовидалення використаних пломб із кешу ПІСЛЯ збереження
 function removeUsedPlombs(usedPlombs, usedMagnets) {
   let plombs = JSON.parse(localStorage.getItem("myPlombs") || "[]");
   let magnets = JSON.parse(localStorage.getItem("myMagnets") || "[]");
@@ -609,18 +705,6 @@ window.addEventListener('offline', () => {
   updateOfflineCount();
 });
 
-function updateOfflineCount() {
-  let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
-  const btn = document.getElementById('btnSync');
-  document.getElementById('offlineCount').innerText = offlineData.length;
-  if(offlineData.length > 0) {
-    btn.classList.remove('hidden');
-    btn.style.background = navigator.onLine ? "#4CAF50" : "#d32f2f"; 
-  } else {
-    btn.classList.add('hidden');
-  }
-}
-
 const loginBox = document.getElementById("login");
 const loginInputs = loginBox.querySelectorAll("input");
 loginInputs.forEach(input => {
@@ -662,10 +746,7 @@ async function doLogin() {
   }
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST', body: JSON.stringify({ action: "login", tab, pass })
-    }).then(r => r.json());
-
+    const res = await sendToGoogle("login", { tab, pass });
     if (res.success) {
       workerTab = tab; workerName = res.name;
       localStorage.setItem("workerTab", tab); 
@@ -676,13 +757,19 @@ async function doLogin() {
       document.getElementById("login").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
       updateOfflineCount();
-    } else alert(res.message);
-  } catch (e) { alert("Помилка зв'язку!"); }
+      updateJournalCount();
+    } else {
+      alert(res.message);
+    }
+  } catch (e) { 
+    // ТЕПЕР МИ ПОБАЧИМО РЕАЛЬНУ ПОМИЛКУ, А НЕ ПРОСТО "Помилка зв'язку"
+    alert("Помилка: " + e.message); 
+  }
   btn.innerText = "Увійти";
 }
 
 // ==========================================
-// ПОШУК І ЗАПОВНЕННЯ 
+// ПОШУК (З ПЕРЕВІРКОЮ БЕЗПЕКИ)
 // ==========================================
 async function search() {
   const acc = document.getElementById("account").value.trim();
@@ -699,9 +786,16 @@ async function search() {
   btn.innerText = "Шукаю...";
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST', body: JSON.stringify({ action: "findAccountFast", account: acc })
-    }).then(r => r.json());
+    const tab = localStorage.getItem("workerTab");
+    const pass = localStorage.getItem("workerPass");
+
+    const res = await sendToGoogle("findAccountFast", { account: acc, tab: tab, pass: pass });
+
+    if (res.error) {
+      alert(res.error);
+      logout();
+      return;
+    }
 
     if (res.found) {
       currentAccount = res.data.account;
@@ -757,16 +851,14 @@ function goHome() {
   updateOfflineCount();
 }
 function goToStep2() { 
-  // ПЕРЕВІРКА: Обов'язкове поле 'Т' знятого лічильника
   const remT0 = document.getElementById("remT0").value.trim();
   if(!remT0) return alert("❌ Обов'язково введіть покази 'T' для ЗНЯТОГО лічильника!");
 
   showScreen('step2'); 
   document.getElementById("instType").value = "NIK2104 AP2T.1802.MC.11";
-  document.getElementById("instT0").value = "000000";
-  document.getElementById("instT1").value = "000000";
-  document.getElementById("instT2").value = "000000";
-  document.getElementById("instT3").value = "000000";
+  document.getElementById("instT0").value = "0000000";
+  document.getElementById("instT1").value = "0000000";
+  document.getElementById("instT2").value = "0000000";
 }
 function goBackToStep1() { showScreen('step1'); }
 
@@ -804,15 +896,38 @@ function filterMeterTypes(value, inputId, hintBoxId){
 }
 
 // ==========================================
-// ЗБЕРЕЖЕННЯ ІЗ ВІЗУАЛЬНИМ СПОВІЩЕННЯМ (БЕЗ ALERT)
+// ЗБЕРЕЖЕННЯ
 // ==========================================
 async function saveData() {
   const getVal = (id) => document.getElementById(id).value.trim();
 
-  // ПЕРЕВІРКА: Обов'язкове поле 'Т' встановленого лічильника
+  const instNum = getVal("instNum");
+  if(!instNum) return alert("❌ Обов'язково введіть Номер ВСТАНОВЛЕНОГО лічильника!");
+
   const instT0 = getVal("instT0");
   if(!instT0) return alert("❌ Обов'язково введіть покази 'T' для ВСТАНОВЛЕНОГО лічильника!");
 
+  const instLichil = getVal("instLichil");
+  if(!instLichil) return alert("❌ Обов'язково вкажіть пломбу Клемної кришки (Встановлену)!");
+
+  const instOptop = getVal("instOptop");
+  if(!instOptop) return alert("❌ Обов'язково вкажіть пломбу Оптопорту (Встановлену)!");
+  // Перевірка дубліката лічильника в журналі за сьогодні
+const remNumVal = getVal("remNum");
+const instNumVal = instNum;
+const today = new Date().toDateString();
+let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+journal = journal.filter(e => new Date(e.ts).toDateString() === today);
+
+const dupRem = journal.find(e => e.removedMeterNumber && e.removedMeterNumber === remNumVal);
+const dupInst = journal.find(e => e.installedMeterNumber && e.installedMeterNumber === instNumVal);
+
+if (dupRem) {
+  if (!confirm(`⚠️ УВАГА! Знятий лічильник ${remNumVal} вже є в журналі сьогодні (О/р: ${dupRem.account}, ${new Date(dupRem.ts).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'})}).\n\nПродовжити збереження?`)) return;
+}
+if (dupInst) {
+  if (!confirm(`⚠️ УВАГА! Встановлений лічильник ${instNumVal} вже є в журналі сьогодні (О/р: ${dupInst.account}, ${new Date(dupInst.ts).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'})}).\n\nПродовжити збереження?`)) return;
+}
   const checkSeal = (remId, instId) => {
     let r = cleanPlomb(getVal(remId)), i = cleanPlomb(getVal(instId));
     return (r === i && r !== "") ? { rem: "", inst: i } : { rem: r, inst: i };
@@ -823,7 +938,9 @@ async function saveData() {
   const imp1 = checkSeal("remImp1", "instImp1"), imp2 = checkSeal("remImp2", "instImp2"), imp3 = checkSeal("remImp3", "instImp3");
 
   const payload = {
-    worker: workerTab, 
+    worker: workerTab,
+    pib: document.getElementById("viewPib1").innerText,
+    address: document.getElementById("viewAddr1").innerText,
     pass: localStorage.getItem("workerPass"), 
     account: currentAccount,
     
@@ -840,7 +957,6 @@ async function saveData() {
     installedOther: getVal("instOther")
   };
 
-  // --- ВИДАЛЕННЯ ВИКОРИСТАНИХ ПЛОМБ ---
   removeUsedPlombs([l.inst, f1.inst, f2.inst, vkp.inst, opt.inst], [imp1.inst, imp2.inst, imp3.inst]);
 
   const btn = document.getElementById("btnSaveMain");
@@ -850,8 +966,10 @@ async function saveData() {
 
   if (!navigator.onLine) {
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+    payload.savedAt = new Date().toISOString();
     offlineData.push(payload);
     localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
+    addToJournal(payload, 'offline');
     playSuccessSound();
     hint.innerText = "✅ Збережено ОФЛАЙН!";
     setTimeout(() => { btn.style.display = "block"; goHome(); }, 1500);
@@ -859,11 +977,9 @@ async function saveData() {
   }
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST', body: JSON.stringify({ action: "saveData", data: payload })
-    }).then(r => r.json());
-    
+    const res = await sendToGoogle("saveData", { data: payload });
     if(res.success) {
+      addToJournal(payload, 'online');
       playSuccessSound();
       hint.innerText = "✅ Дані успішно збережено!";
       setTimeout(() => { btn.style.display = "block"; goHome(); }, 1500);
@@ -874,8 +990,10 @@ async function saveData() {
     }
   } catch (e) {
     let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+    payload.savedAt = new Date().toISOString();
     offlineData.push(payload);
     localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
+    addToJournal(payload, 'offline');
     playSuccessSound();
     hint.innerText = "⚠️ Немає зв'язку. Збережено ОФЛАЙН!";
     setTimeout(() => { btn.style.display = "block"; goHome(); }, 1500);
@@ -895,15 +1013,25 @@ async function syncOfflineData() {
   btn.innerText = "⏳ Відправка...";
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST', body: JSON.stringify({ action: "saveDataBatch", items: offlineData })
-    }).then(r => r.json());
-
+    const res = await sendToGoogle("saveDataBatch", { items: offlineData });
     if (res.ok) {
-      localStorage.removeItem('offlineDataPLC');
-      playSuccessSound();
-      alert(`✅ Вивантажено ${res.saved} записів з офлайну!`);
-      updateOfflineCount();
+  // Оновлюємо статус у журналі з 'offline' на 'online'
+  const syncedAccounts = offlineData.map(d => d.account);
+  let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+  journal = journal.map(e => {
+    if (e.status === 'offline' && syncedAccounts.includes(e.account)) {
+      return Object.assign({}, e, { status: 'online' });
+    }
+    return e;
+  });
+  localStorage.setItem('journalPLC', JSON.stringify(journal));
+
+  localStorage.removeItem('offlineDataPLC');
+  playSuccessSound();
+  alert(`✅ Вивантажено ${res.saved} записів з офлайну!`);
+  document.getElementById('offlinePreviewModal').classList.add('hidden');
+  updateOfflineCount();
+  updateJournalCount();
     } else {
       alert("⚠️ Помилка синхронізації: " + (res.message || ""));
       btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
@@ -915,7 +1043,7 @@ async function syncOfflineData() {
 }
 
 // ==========================================
-// ТВІЙ ОРИГІНАЛЬНИЙ СКАНЕР ШТРИХКОДІВ
+// СКАНЕР ШТРИХКОДІВ
 // ==========================================
 let html5QrCode = null;
 let isTorchOn = false;
@@ -975,7 +1103,7 @@ function startScanner(targetFieldId, doSearch) {
 
       html5QrCode.start(
         selectedDeviceId, 
-        { fps: 10, qrbox: { width: 250, height: 100 } },
+        { fps: 15, qrbox: { width: 250, height: 250} },
         (decodedText) => {
           playBeep(); 
           let finalCode = (currentScanTargetId !== "account") ? parseMeterBarcode(decodedText) : decodedText;
@@ -988,7 +1116,7 @@ function startScanner(targetFieldId, doSearch) {
         },
         () => {} 
       ).then(() => {
-        setTimeout(() => setZoom(2.5), 1200);
+        setTimeout(() => setZoom(2.5), 300);
       }).catch(err => {
         alert("Помилка камери: " + err);
         stopScanner();
@@ -1016,6 +1144,184 @@ function parseMeterBarcode(rawCode) {
   return code;
 }
 
+// ==========================================
+// ЖУРНАЛ ЗА ДЕНЬ
+// ==========================================
+function addToJournal(payload, status) {
+  let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+  
+  // Зберігаємо тільки останні 24 дні
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 90);
+  journal = journal.filter(e => new Date(e.ts) >= cutoff);
+  
+  journal.push({
+    ts: new Date().toISOString(),
+    status: status,
+    account: payload.account || '',
+    pib: payload.pib || '',
+    address: payload.address || '',
+    removedMeterType: payload.removedMeterType || '',
+    removedMeterNumber: payload.removedMeterNumber || '',
+    installedMeterType: payload.installedMeterType || '',
+    installedMeterNumber: payload.installedMeterNumber || '',
+    installedLichil: payload.installedLichil || '',
+    installedFasad1: payload.installedFasad1 || '',
+    installedFasad2: payload.installedFasad2 || '',
+    installedVkp: payload.installedVkp || '',
+    installedOptop: payload.installedOptop || '',
+    installedImp1: payload.installedImp1 || '',
+    installedImp2: payload.installedImp2 || '',
+    installedImp3: payload.installedImp3 || ''
+  });
+  localStorage.setItem('journalPLC', JSON.stringify(journal));
+  updateJournalCount();
+}
+  
+function updateJournalCount() {
+  const today = new Date().toDateString();
+  let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+  const el = document.getElementById('journalCount');
+  if (el) el.innerText = journal.filter(e => new Date(e.ts).toDateString() === today).length;
+}
+
+function openJournalModal() {
+  let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+  
+  // Збираємо унікальні дати
+  const datesMap = {};
+  journal.forEach(e => {
+    const d = new Date(e.ts).toDateString();
+    if (!datesMap[d]) datesMap[d] = [];
+    datesMap[d].push(e);
+  });
+  const sortedDates = Object.keys(datesMap).sort((a, b) => new Date(b) - new Date(a));
+  
+  const list = document.getElementById('journalList');
+  const today = new Date().toDateString();
+  
+  // Будуємо селектор дат + список
+  const dateOptions = sortedDates.map(d => {
+    const label = d === today ? 'Сьогодні' : new Date(d).toLocaleDateString('uk-UA', {day:'numeric', month:'long'});
+    return `<option value="${d}">${label} (${datesMap[d].length})</option>`;
+  }).join('');
+
+  list.innerHTML = `
+    <div style="margin-bottom:10px;">
+      <select id="journalDateSelect" onchange="renderJournalForDate()" 
+        style="width:100%;padding:10px;font-size:16px;border-radius:8px;border:1px solid #ccc;">
+        ${dateOptions}
+      </select>
+    </div>
+    <div id="journalDayList"></div>
+  `;
+  
+  document.getElementById('journalModal').classList.remove('hidden');
+  renderJournalForDate();
+}
+
+function renderJournalForDate() {
+  const sel = document.getElementById('journalDateSelect');
+  if (!sel) return;
+  const selectedDate = sel.value;
+  
+  let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+  const dayEntries = journal
+    .filter(e => new Date(e.ts).toDateString() === selectedDate)
+    .slice().reverse();
+  
+  const container = document.getElementById('journalDayList');
+  if (dayEntries.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Немає записів</div>';
+    return;
+  }
+  
+  container.innerHTML = dayEntries.map(e => {
+    const t = new Date(e.ts);
+    const timeStr = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+    const badge = e.status === 'online'
+      ? '<span class="badge-online">✓ відправлено</span>'
+      : '<span class="badge-offline">⚠ офлайн</span>';
+    return `<div class="journal-item">
+      <div class="journal-item-top">
+        <span class="journal-acc">О/р: ${e.account}</span>
+        <span class="journal-time">${timeStr} ${badge}</span>
+      </div>
+      <div class="journal-pib">${e.pib || '—'}</div>
+      <div class="journal-meters">
+        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>
+        Встановлений: ${e.installedMeterType} ${e.installedMeterNumber}<br>
+        ${buildPlombLine(e)}
+      </div>
+    </div>`;
+  }).join('');
+}
+  
+  function buildPlombLine(e) {
+  const map = [
+    ['Кр', e.installedLichil],
+    ['ШО1', e.installedFasad1],
+    ['ШО2', e.installedFasad2],
+    ['ВКП', e.installedVkp],
+    ['Опт', e.installedOptop],
+    ['ІМП1', e.installedImp1],
+    ['ІМП2', e.installedImp2],
+    ['ІМП3', e.installedImp3],
+  ];
+  const parts = map.filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`);
+  if (!parts.length) return '';
+  return '🔒 ' + parts.join(' · ');
+}
+
+// ==========================================
+// ПЕРЕГЛЯД ОФЛАЙН ДАНИХ
+// ==========================================
+function openOfflinePreview() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+  const list = document.getElementById('offlineList');
+  if (offlineData.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Немає незавантажених записів</div>';
+  } else {
+    list.innerHTML = offlineData.map((e, idx) => {
+      const t = e.savedAt ? new Date(e.savedAt) : null;
+      const timeStr = t ? t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0') : '';
+      return `<div class="offline-item">
+        <div class="offline-item-info">
+          <div style="font-weight:bold;color:#1565c0;margin-bottom:3px;">О/р: ${e.account || '—'} <span style="font-size:12px;color:#888;">${timeStr}</span></div>
+          <div style="font-size:13px;margin-bottom:2px;">${e.pib || '—'}</div>
+          <div style="font-size:12px;color:#555;">
+  Знятий: ${e.removedMeterType || ''} ${e.removedMeterNumber || ''}<br>
+  Встановлений: ${e.installedMeterType || ''} ${e.installedMeterNumber || ''}<br>
+  ${buildPlombLine(e)}
+</div>
+        </div>
+        <button class="offline-delete-btn" onclick="deleteOfflineItem(${idx})">🗑</button>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('offlinePreviewModal').classList.remove('hidden');
+}
+
+function deleteOfflineItem(idx) {
+  if (!confirm('Видалити цей запис?')) return;
+  let offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+  offlineData.splice(idx, 1);
+  localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
+  updateOfflineCount();
+  openOfflinePreview();
+}
+
+function updateOfflineCount() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineDataPLC') || '[]');
+  const count = offlineData.length;
+  const btn = document.getElementById('btnSync');
+  if (!btn) return;
+  if (count > 0) {
+    btn.classList.remove('hidden');
+    btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${count}</span>`;
+  } else {
+    btn.classList.add('hidden');
+    btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">0</span>`;
+  }
+}
 </script>
-</body>
-</html>
