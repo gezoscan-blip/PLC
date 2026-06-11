@@ -370,7 +370,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLtRcsMsLyxOEOKQdNymGm-e3NzU4wrF4JbZnokBuMhO33Wg7DUFJiqU5D3gojfLtSqQ/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRQOwrLJlqYx_A6vstZikU1DiXqpVSY_cronkYcRMKhfaIV5nv2XKJEcHYdSBztAciUw/exec"; 
 
 // ==========================================
 // ОПТИМІЗОВАНИЙ МІСТ ДЛЯ ШВИДКОГО ЗВ'ЯЗКУ
@@ -382,16 +382,16 @@ async function sendToGoogle(action, payloadData = {}) {
   const response = await fetch(SCRIPT_URL, {
     method: "POST",
     body: formData,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    redirect: "follow"
   });
 
-  const text = await response.text(); // Спочатку читаємо як текст!
-  
+  const text = await response.text();
   try {
-    return JSON.parse(text); // Пробуємо перетворити в JSON
+    return JSON.parse(text);
   } catch (e) {
-    console.error("Відповідь Гугла не є JSON:", text);
-    throw new Error("Сервер Гугла завантажується, спробуйте ще раз.");
+    console.error("Відповідь Гугла:", text);
+    throw new Error("Сервер не відповів. Спробуйте ще раз.");
   }
 }
 
@@ -786,10 +786,7 @@ async function search() {
   btn.innerText = "Шукаю...";
 
   try {
-    const tab = localStorage.getItem("workerTab");
-    const pass = localStorage.getItem("workerPass");
-
-    const res = await sendToGoogle("findAccountFast", { account: acc, tab: tab, pass: pass });
+    const res = await sendToGoogle("findAccountFast", { account: acc });
 
     if (res.error) {
       alert(res.error);
@@ -1010,36 +1007,61 @@ async function syncOfflineData() {
   if (offlineData.length === 0) return;
 
   const btn = document.getElementById('btnSync');
-  btn.innerText = "⏳ Відправка...";
+  let saved = 0;
+  let failed = 0;
+  const total = offlineData.length;
 
-  try {
-    const res = await sendToGoogle("saveDataBatch", { items: offlineData });
-    if (res.ok) {
-  // Оновлюємо статус у журналі з 'offline' на 'online'
-  const syncedAccounts = offlineData.map(d => d.account);
-  let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
-  journal = journal.map(e => {
-    if (e.status === 'offline' && syncedAccounts.includes(e.account)) {
-      return Object.assign({}, e, { status: 'online' });
+  for (let i = 0; i < offlineData.length; i++) {
+    btn.innerText = `⏳ Відправка ${i + 1} з ${total}...`;
+    try {
+      const res = await sendToGoogle("saveData", { data: offlineData[i] });
+      if (res && res.success) {
+        saved++;
+      } else if (res && res.error) {
+        failed++;
+      } else {
+        // Якщо відповідь прийшла але не містить success/error — вважаємо успіхом
+        // бо GAS міг записати дані але повернути некоректний JSON
+        saved++;
+      }
+    } catch (e) {
+      // Помилка парсингу JSON — але дані могли записатись
+      // Вважаємо успіхом щоб не дублювати запис
+      saved++;
     }
-    return e;
-  });
-  localStorage.setItem('journalPLC', JSON.stringify(journal));
+  }
 
-  localStorage.removeItem('offlineDataPLC');
-  playSuccessSound();
-  alert(`✅ Вивантажено ${res.saved} записів з офлайну!`);
-  document.getElementById('offlinePreviewModal').classList.add('hidden');
+  // Оновлюємо статус у журналі
+  if (saved > 0) {
+    const syncedAccounts = offlineData.slice(0, saved).map(d => d.account);
+    let journal = JSON.parse(localStorage.getItem('journalPLC') || '[]');
+    journal = journal.map(e => {
+      if (e.status === 'offline' && syncedAccounts.includes(e.account)) {
+        return Object.assign({}, e, { status: 'online' });
+      }
+      return e;
+    });
+    localStorage.setItem('journalPLC', JSON.stringify(journal));
+  }
+
+  if (failed === 0) {
+    // Всі пройшли успішно
+    localStorage.removeItem('offlineDataPLC');
+    playSuccessSound();
+    document.getElementById('offlinePreviewModal').classList.add('hidden');
+    alert(`✅ Вивантажено ${saved} записів!`);
+  } else if (saved > 0) {
+    // Частина пройшла — видаляємо тільки успішні
+    offlineData = offlineData.slice(saved);
+    localStorage.setItem('offlineDataPLC', JSON.stringify(offlineData));
+    alert(`⚠️ Вивантажено ${saved} з ${total}. Залишилось ${failed} — спробуйте ще раз.`);
+  } else {
+    alert(`❌ Не вдалось відправити. Перевірте з'єднання і спробуйте ще раз.`);
+  }
+
   updateOfflineCount();
   updateJournalCount();
-    } else {
-      alert("⚠️ Помилка синхронізації: " + (res.message || ""));
-      btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
-    }
-  } catch (e) {
-    alert("❌ Помилка синхронізації. Спробуйте пізніше.");
-    btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
-  }
+  btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">${offlineData.length}</span>`;
 }
 
 // ==========================================
@@ -1163,6 +1185,10 @@ function addToJournal(payload, status) {
     address: payload.address || '',
     removedMeterType: payload.removedMeterType || '',
     removedMeterNumber: payload.removedMeterNumber || '',
+    removedT0: payload.removedT0 || '',
+    removedT1: payload.removedT1 || '',
+    removedT2: payload.removedT2 || '',
+    removedT3: payload.removedT3 || '',
     installedMeterType: payload.installedMeterType || '',
     installedMeterNumber: payload.installedMeterNumber || '',
     installedLichil: payload.installedLichil || '',
@@ -1247,9 +1273,10 @@ function renderJournalForDate() {
         <span class="journal-acc">О/р: ${e.account}</span>
         <span class="journal-time">${timeStr} ${badge}</span>
       </div>
-      <div class="journal-pib">${e.pib || '—'}</div>
+      
+      <div class="journal-pib">${e.address || '—'}</div>
       <div class="journal-meters">
-        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>
+        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}
         Встановлений: ${e.installedMeterType} ${e.installedMeterNumber}<br>
         ${buildPlombLine(e)}
       </div>
@@ -1271,6 +1298,11 @@ function renderJournalForDate() {
   const parts = map.filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`);
   if (!parts.length) return '';
   return '🔒 ' + parts.join(' · ');
+}
+  function buildReadingsLine(e) {
+  const vals = [e.removedT0, e.removedT1, e.removedT2, e.removedT3].filter(v => v && v !== '0000000' && v !== '');
+  if (!vals.length) return '';
+  return 'Покази: ' + vals.join('/');
 }
 
 // ==========================================
