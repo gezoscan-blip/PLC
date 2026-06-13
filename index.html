@@ -181,6 +181,12 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
         <button class="scan-btn-outer" onclick="startScanner('remNum', false)">
           <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
         </button>
+        <button class="scan-btn-outer" onclick="startPhotoCapture('remNum')" style="background: #1976d2;">
+          <span style="font-size: 24px;">📷</span>
+        </button>
+      </div>
+          <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
+        </button>
       </div>
     </div>
     <div class="sectionLine"></div>
@@ -370,7 +376,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRQOwrLJlqYx_A6vstZikU1DiXqpVSY_cronkYcRMKhfaIV5nv2XKJEcHYdSBztAciUw/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkdx5QMAr5on0QRrVfTH5pVtUJPUCSyLedjuyMJrtm4NBFbvh2lWI0OLxfuw4L3Kritw/exec"; 
 
 // ==========================================
 // ОПТИМІЗОВАНИЙ МІСТ ДЛЯ ШВИДКОГО ЗВ'ЯЗКУ
@@ -940,6 +946,7 @@ if (dupInst) {
     address: document.getElementById("viewAddr1").innerText,
     pass: localStorage.getItem("workerPass"), 
     account: currentAccount,
+    removedPhotoUrl: document.getElementById("remNum").dataset.photoUrl || "",
     
     removedMeterType: getVal("remType"), removedMeterNumber: getVal("remNum"),
     removedT0: getVal("remT0"), removedT1: getVal("remT1"), removedT2: getVal("remT2"), removedT3: getVal("remT3"),
@@ -1185,6 +1192,7 @@ function addToJournal(payload, status) {
     address: payload.address || '',
     removedMeterType: payload.removedMeterType || '',
     removedMeterNumber: payload.removedMeterNumber || '',
+    removedPhotoUrl: payload.removedPhotoUrl || '',
     removedT0: payload.removedT0 || '',
     removedT1: payload.removedT1 || '',
     removedT2: payload.removedT2 || '',
@@ -1276,7 +1284,7 @@ function renderJournalForDate() {
       
       <div class="journal-pib">${e.address || '—'}</div>
       <div class="journal-meters">
-        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}
+        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}${e.removedPhotoUrl ? `<a href="${e.removedPhotoUrl}" target="_blank" style="color: #1565c0; text-decoration: none;">🔗 Фото лічильника</a><br>` : ''}
         Встановлений: ${e.installedMeterType} ${e.installedMeterNumber}<br>
         ${buildPlombLine(e)}
       </div>
@@ -1354,6 +1362,88 @@ function updateOfflineCount() {
   } else {
     btn.classList.add('hidden');
     btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">0</span>`;
+  }
+}
+  // ==========================================
+// ФОТОГРАФУВАННЯ
+// ==========================================
+let photoStream = null;
+let currentPhotoTargetId = "";
+
+function startPhotoCapture(targetId) {
+  currentPhotoTargetId = targetId;
+  document.getElementById("scanner-wrapper").style.display = "flex";
+  
+  const constraints = { 
+    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+    audio: false 
+  };
+  
+  navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    photoStream = stream;
+    const video = document.createElement('video');
+    video.id = 'photoVideo';
+    video.srcObject = stream;
+    video.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+    video.play();
+    
+    const readerDiv = document.getElementById('reader');
+    readerDiv.innerHTML = '';
+    readerDiv.appendChild(video);
+    
+    document.getElementById('scan-hint').innerText = 'Натисніть кнопку щоб зробити фото';
+    
+    // Замість кнопок зуму показуємо кнопку фото
+    const zoomDiv = document.querySelector('#scanner-wrapper > div > div:last-child');
+    zoomDiv.innerHTML = `
+      <button onclick="takePhoto()" style="width: 60px; height: 60px; border-radius: 50%; background: #4CAF50; border: 3px solid white; color: white; font-weight: bold; font-size: 18px; padding: 0; cursor: pointer;">✓</button>
+    `;
+  }).catch(err => {
+    alert("Помилка доступу до камери: " + err.message);
+    stopScanner();
+  });
+}
+
+function takePhoto() {
+  const video = document.getElementById('photoVideo');
+  if (!video) return;
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  
+  // Стискаємо фото до 38 КБ як в JetScan
+  canvas.toBlob(blob => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      uploadPhoto(base64);
+    };
+    reader.readAsDataURL(blob);
+  }, 'image/jpeg', 0.7); // якість 0.7 дає ~38-50 КБ
+}
+
+async function uploadPhoto(base64Data) {
+  const fileName = `PLC_${new Date().getTime()}.jpg`;
+  
+  try {
+    const res = await sendToGoogle("uploadPhoto", { 
+      photoBase64: base64Data, 
+      fileName: fileName 
+    });
+    
+    if (res.success) {
+      document.getElementById(currentPhotoTargetId).dataset.photoUrl = res.url;
+      document.getElementById(currentPhotoTargetId).dataset.photoName = fileName;
+      alert("✅ Фото збережено!");
+      stopScanner();
+    } else {
+      alert("❌ Помилка: " + res.error);
+    }
+  } catch (e) {
+    alert("Помилка завантаження: " + e.message);
   }
 }
 </script>
