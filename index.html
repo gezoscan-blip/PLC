@@ -181,12 +181,6 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
         <button class="scan-btn-outer" onclick="startScanner('remNum', false)">
           <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
         </button>
-        <button class="scan-btn-outer" onclick="startPhotoCapture('remNum')" style="background: #1976d2;">
-          <span style="font-size: 24px;">📷</span>
-        </button>
-      </div>
-          <svg class="scan-icon" viewBox="0 0 24 24"><path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-9 4h2v10h-2V7zm-4 0h2v10H6V7zm10 0h2v10h-2V7zm-6 0h4v10h-4V7z"/></svg>
-        </button>
       </div>
     </div>
     <div class="sectionLine"></div>
@@ -306,6 +300,12 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <div class="meterBox"><label>T2</label><input id="instT2" inputmode="numeric"></div>
       <div class="meterBox"><label>T3</label><input id="instT3" inputmode="numeric"></div>
     </div>
+    
+    <div class="blockTitle">Фотозвіт</div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="margin-bottom:8px;">
+    <button type="button" onclick="uploadPhoto()" style="width: 100%; background-color: #1565c0; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">Завантажити фото</button>
+    <div id="uploadStatus" style="margin-top:6px; font-size: 14px;"></div>
+    <input type="hidden" id="photoUrl">
 
     <button class="btn-save" id="btnSaveMain" onclick="saveData()">💾 Зберегти</button>
     <div id="saveHint"></div>
@@ -376,7 +376,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1CQzjhKWxhX7j4ox9H-zhXMTWtSiIxK_eLJSg0AxZU53Bctz_qj9KTSLUtud-3ArlsQ/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtFEyV3NM1bvOISftdxpYTW3Irg1DT1dBTx4QOP9snxb-pMPxhfn0r_BpoP5rbV0WyHQ/exec"; 
 
 // ==========================================
 // ОПТИМІЗОВАНИЙ МІСТ ДЛЯ ШВИДКОГО ЗВ'ЯЗКУ
@@ -946,7 +946,6 @@ if (dupInst) {
     address: document.getElementById("viewAddr1").innerText,
     pass: localStorage.getItem("workerPass"), 
     account: currentAccount,
-    removedPhotoUrl: document.getElementById("remNum").dataset.photoUrl || "",
     
     removedMeterType: getVal("remType"), removedMeterNumber: getVal("remNum"),
     removedT0: getVal("remT0"), removedT1: getVal("remT1"), removedT2: getVal("remT2"), removedT3: getVal("remT3"),
@@ -958,7 +957,8 @@ if (dupInst) {
     installedT0: instT0, installedT1: getVal("instT1"), installedT2: getVal("instT2"), installedT3: getVal("instT3"),
     installedLichil: l.inst, installedFasad1: f1.inst, installedFasad2: f2.inst, installedVkp: vkp.inst,
     installedOptop: opt.inst, installedImp1: imp1.inst, installedImp2: imp2.inst, installedImp3: imp3.inst,
-    installedOther: getVal("instOther")
+    installedOther: getVal("instOther"),
+    photoUrl: document.getElementById('photoUrl').value.trim()
   };
 
   removeUsedPlombs([l.inst, f1.inst, f2.inst, vkp.inst, opt.inst], [imp1.inst, imp2.inst, imp3.inst]);
@@ -1192,7 +1192,6 @@ function addToJournal(payload, status) {
     address: payload.address || '',
     removedMeterType: payload.removedMeterType || '',
     removedMeterNumber: payload.removedMeterNumber || '',
-    removedPhotoUrl: payload.removedPhotoUrl || '',
     removedT0: payload.removedT0 || '',
     removedT1: payload.removedT1 || '',
     removedT2: payload.removedT2 || '',
@@ -1284,7 +1283,7 @@ function renderJournalForDate() {
       
       <div class="journal-pib">${e.address || '—'}</div>
       <div class="journal-meters">
-        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}${e.removedPhotoUrl ? `<a href="${e.removedPhotoUrl}" target="_blank" style="color: #1565c0; text-decoration: none;">🔗 Фото лічильника</a><br>` : ''}
+        Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}
         Встановлений: ${e.installedMeterType} ${e.installedMeterNumber}<br>
         ${buildPlombLine(e)}
       </div>
@@ -1364,86 +1363,45 @@ function updateOfflineCount() {
     btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">0</span>`;
   }
 }
-  // ==========================================
-// ФОТОГРАФУВАННЯ
-// ==========================================
-let photoStream = null;
-let currentPhotoTargetId = "";
 
-function startPhotoCapture(targetId) {
-  currentPhotoTargetId = targetId;
-  document.getElementById("scanner-wrapper").style.display = "flex";
+  async function uploadPhoto() {
+  const input = document.getElementById('photoInput');
+  if (input.files.length === 0) {
+    alert("Виберіть фото!");
+    return;
+  }
   
-  const constraints = { 
-    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-    audio: false 
-  };
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'unsigned_preset');  // Замініть 'unsigned_preset' на вашу назву пресету
   
-  navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-    photoStream = stream;
-    const video = document.createElement('video');
-    video.id = 'photoVideo';
-    video.srcObject = stream;
-    video.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
-    video.play();
-    
-    const readerDiv = document.getElementById('reader');
-    readerDiv.innerHTML = '';
-    readerDiv.appendChild(video);
-    
-    document.getElementById('scan-hint').innerText = 'Натисніть кнопку щоб зробити фото';
-    
-    // Замість кнопок зуму показуємо кнопку фото
-    const zoomDiv = document.querySelector('#scanner-wrapper > div > div:last-child');
-    zoomDiv.innerHTML = `
-      <button onclick="takePhoto()" style="width: 60px; height: 60px; border-radius: 50%; background: #4CAF50; border: 3px solid white; color: white; font-weight: bold; font-size: 18px; padding: 0; cursor: pointer;">✓</button>
-    `;
-  }).catch(err => {
-    alert("Помилка доступу до камери: " + err.message);
-    stopScanner();
-  });
-}
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.style.color = 'black';
+  statusEl.innerText = 'Завантаження...';
 
-function takePhoto() {
-  const video = document.getElementById('photoVideo');
-  if (!video) return;
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  
-  // Стискаємо фото до 38 КБ як в JetScan
-  canvas.toBlob(blob => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result.split(',')[1];
-      uploadPhoto(base64);
-    };
-    reader.readAsDataURL(blob);
-  }, 'image/jpeg', 0.7); // якість 0.7 дає ~38-50 КБ
-}
-
-async function uploadPhoto(base64Data) {
-  const fileName = `PLC_${new Date().getTime()}.jpg`;
-  
   try {
-    const res = await sendToGoogle("uploadPhoto", { 
-      photoBase64: base64Data, 
-      fileName: fileName 
+    const res = await fetch('https://api.cloudinary.com/v1_1/dbmplmdmo/image/upload', {
+      method: 'POST',
+      body: formData
     });
     
-    if (res.success) {
-      document.getElementById(currentPhotoTargetId).dataset.photoUrl = res.url;
-      document.getElementById(currentPhotoTargetId).dataset.photoName = fileName;
-      alert("✅ Фото збережено!");
-      stopScanner();
+    const data = await res.json();
+
+    if (data.secure_url) {
+      statusEl.style.color = 'green';
+      statusEl.innerText = 'Фото завантажено!';
+      document.getElementById('photoUrl').value = data.secure_url;
     } else {
-      alert("❌ Помилка: " + res.error);
+      statusEl.style.color = 'red';
+      statusEl.innerText = 'Помилка завантаження!';
+      console.error(data);
     }
-  } catch (e) {
-    alert("Помилка завантаження: " + e.message);
+  } catch(e) {
+    statusEl.style.color = 'red';
+    statusEl.innerText = 'Помилка мережі!';
+    console.error(e);
   }
 }
+
 </script>
