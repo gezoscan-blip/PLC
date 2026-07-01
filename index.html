@@ -394,7 +394,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybJivlt6Uy6gP1Ms0D2gBpmF3K8FaEjssTFgetWGeSiAsaIEYWf8W3UPuOR5jmnnkqFA/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUdHYPsgDn5Agw6FTT581ENM3pppeMw-X5C0JHU1KUwjymYQ76CcgrgHwJKE3RCRhKAw/exec"; 
 
 // ==========================================
 // ОПТИМІЗОВАНИЙ МІСТ ДЛЯ ШВИДКОГО ЗВ'ЯЗКУ
@@ -1401,15 +1401,18 @@ function updateOfflineCount() {
   
 document.getElementById('fileInput').addEventListener('change', async function() {
   if (this.files && this.files[0]) {
+    previewFile(this.files[0]);  // Показати прев’ю
     await handlePhotoChange(this.files[0]);
   }
 });
 
 document.getElementById('cameraInput').addEventListener('change', async function() {
   if (this.files && this.files[0]) {
+    previewFile(this.files[0]);  // Показати прев'ю
     await handlePhotoChange(this.files[0]);
   }
 });
+
 
  function extractPublicId(url) {
   if (!url) return null;
