@@ -300,12 +300,6 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <div class="meterBox"><label>T2</label><input id="instT2" inputmode="numeric"></div>
       <div class="meterBox"><label>T3</label><input id="instT3" inputmode="numeric"></div>
     </div>
-    
-    <div class="blockTitle">Фотозвіт</div>
-    <input type="file" id="photoInput" accept="image/*" capture="environment" style="margin-bottom:8px;">
-    <button type="button" onclick="uploadPhoto()" style="width: 100%; background-color: #1565c0; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">Завантажити фото</button>
-    <div id="uploadStatus" style="margin-top:6px; font-size: 14px;"></div>
-    <input type="hidden" id="photoUrl">
 
     <button class="btn-save" id="btnSaveMain" onclick="saveData()">💾 Зберегти</button>
     <div id="saveHint"></div>
@@ -376,7 +370,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 // ==========================================
 // ⚠️ ТУТ ВСТАВ ПОСИЛАННЯ З GOOGLE APPS SCRIPT
 // ==========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtFEyV3NM1bvOISftdxpYTW3Irg1DT1dBTx4QOP9snxb-pMPxhfn0r_BpoP5rbV0WyHQ/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_eWAvwsV4NLflNyHli5K3ZehbCRH0QJ07s7Ta8JV_77IONxfDswanlUrrgb_OIv9VuQ/exec"; 
 
 // ==========================================
 // ОПТИМІЗОВАНИЙ МІСТ ДЛЯ ШВИДКОГО ЗВ'ЯЗКУ
@@ -957,8 +951,7 @@ if (dupInst) {
     installedT0: instT0, installedT1: getVal("instT1"), installedT2: getVal("instT2"), installedT3: getVal("instT3"),
     installedLichil: l.inst, installedFasad1: f1.inst, installedFasad2: f2.inst, installedVkp: vkp.inst,
     installedOptop: opt.inst, installedImp1: imp1.inst, installedImp2: imp2.inst, installedImp3: imp3.inst,
-    installedOther: getVal("instOther"),
-    photoUrl: document.getElementById('photoUrl').value.trim()
+    installedOther: getVal("instOther")
   };
 
   removeUsedPlombs([l.inst, f1.inst, f2.inst, vkp.inst, opt.inst], [imp1.inst, imp2.inst, imp3.inst]);
@@ -1363,45 +1356,4 @@ function updateOfflineCount() {
     btn.innerHTML = `📤 Незавантажені дані: <span id="offlineCount">0</span>`;
   }
 }
-
-  async function uploadPhoto() {
-  const input = document.getElementById('photoInput');
-  if (input.files.length === 0) {
-    alert("Виберіть фото!");
-    return;
-  }
-  
-  const file = input.files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'unsigned_preset');  // Замініть 'unsigned_preset' на вашу назву пресету
-  
-  const statusEl = document.getElementById('uploadStatus');
-  statusEl.style.color = 'black';
-  statusEl.innerText = 'Завантаження...';
-
-  try {
-    const res = await fetch('https://api.cloudinary.com/v1_1/dbmplmdmo/image/upload', {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await res.json();
-
-    if (data.secure_url) {
-      statusEl.style.color = 'green';
-      statusEl.innerText = 'Фото завантажено!';
-      document.getElementById('photoUrl').value = data.secure_url;
-    } else {
-      statusEl.style.color = 'red';
-      statusEl.innerText = 'Помилка завантаження!';
-      console.error(data);
-    }
-  } catch(e) {
-    statusEl.style.color = 'red';
-    statusEl.innerText = 'Помилка мережі!';
-    console.error(e);
-  }
-}
-
 </script>
