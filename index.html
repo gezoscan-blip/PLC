@@ -302,10 +302,20 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
     </div>
 
   <div class="blockTitle">Фотозвіт</div>
-<input type="file" id="photoInput" accept="image/*" capture="environment" style="margin-bottom:8px;">
-<button type="button" onclick="uploadPhoto()" style="width: 100%; background-color: #1565c0; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">Завантажити фото</button>
+<button type="button" onclick="document.getElementById('fileInput').click()" 
+  style="width: 48%; margin-right:4%; background-color: #2196F3; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">
+  Виберіть файл
+</button>
+<button type="button" onclick="document.getElementById('cameraInput').click()" 
+  style="width: 48%; background-color: #1565c0; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">
+  Зробити фото
+</button>
+<input type="file" id="fileInput" accept="image/*" style="display:none;">
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 <div id="uploadStatus" style="margin-top:6px; font-size: 14px;"></div>
 <input type="hidden" id="photoUrl">
+
+
 
     
     <button class="btn-save" id="btnSaveMain" onclick="saveData()">💾 Зберегти</button>
@@ -1401,6 +1411,50 @@ function updateOfflineCount() {
   } catch(e) {
     statusEl.style.color = 'red';
     statusEl.innerText = 'Помилка мережі!';
+    console.error(e);
+  }
+}
+
+  document.getElementById('fileInput').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    uploadPhotoFile(this.files[0]);
+  }
+});
+
+document.getElementById('cameraInput').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    uploadPhotoFile(this.files[0]);
+  }
+});
+
+async function uploadPhotoFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'unsigned_preset');  // замініть на свій пресет зі Cloudinary
+
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.style.color = 'black';
+  statusEl.textContent = 'Завантаження...';
+
+  try {
+    const response = await fetch('https://api.cloudinary.com/v1_1/dbmplmdmo/image/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+
+    if (data.secure_url) {
+      statusEl.style.color = 'green';
+      statusEl.textContent = 'Фото завантажено!';
+      document.getElementById('photoUrl').value = data.secure_url;
+    } else {
+      statusEl.style.color = 'red';
+      statusEl.textContent = 'Помилка завантаження!';
+      console.error(data);
+    }
+  } catch(e) {
+    statusEl.style.color = 'red';
+    statusEl.textContent = 'Помилка мережі!';
     console.error(e);
   }
 }
