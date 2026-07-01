@@ -314,6 +314,8 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 <div id="uploadStatus" style="margin-top:6px; font-size: 14px;"></div>
 <input type="hidden" id="photoUrl">
+<img id="photoPreview" style="max-width: 100%; margin-top:10px; display:none;" alt="Прев’ю фото">
+
 
 
 
@@ -1407,6 +1409,34 @@ async function uploadPhotoFile(file) {
     console.error(e);
   }
 }
+  function previewFile(file) {
+  const preview = document.getElementById('photoPreview');
+  if (!file) {
+    preview.style.display = 'none';
+    preview.src = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+document.getElementById('fileInput').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    previewFile(this.files[0]);
+    uploadPhotoFile(this.files[0]);
+  }
+});
+
+document.getElementById('cameraInput').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    previewFile(this.files[0]);
+    uploadPhotoFile(this.files[0]);
+  }
+});
+
 
   
 </script>
