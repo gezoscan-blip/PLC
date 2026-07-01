@@ -1375,57 +1375,6 @@ function updateOfflineCount() {
   }
 }
 
-  async function uploadPhoto() {
-  const input = document.getElementById('photoInput');
-  if (input.files.length === 0) {
-    alert("Виберіть фото!");
-    return;
-  }
-  
-  const file = input.files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'unsigned_preset'); // замініть на ваш upload preset
-  
-  const statusEl = document.getElementById('uploadStatus');
-  statusEl.style.color = 'black';
-  statusEl.innerText = 'Завантаження...';
-
-  try {
-    const res = await fetch('https://api.cloudinary.com/v1_1/dbmplmdmo/image/upload', {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await res.json();
-
-    if (data.secure_url) {
-      statusEl.style.color = 'green';
-      statusEl.innerText = 'Фото завантажено!';
-      document.getElementById('photoUrl').value = data.secure_url;
-    } else {
-      statusEl.style.color = 'red';
-      statusEl.innerText = 'Помилка завантаження!';
-      console.error(data);
-    }
-  } catch(e) {
-    statusEl.style.color = 'red';
-    statusEl.innerText = 'Помилка мережі!';
-    console.error(e);
-  }
-}
-
-  document.getElementById('fileInput').addEventListener('change', function() {
-  if (this.files && this.files[0]) {
-    uploadPhotoFile(this.files[0]);
-  }
-});
-
-document.getElementById('cameraInput').addEventListener('change', function() {
-  if (this.files && this.files[0]) {
-    uploadPhotoFile(this.files[0]);
-  }
-});
 
 async function uploadPhotoFile(file) {
   const formData = new FormData();
