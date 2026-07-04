@@ -1320,7 +1320,7 @@ function renderJournalForDate() {
       <div class="journal-pib">${e.address || '—'}</div>
       <div class="journal-meters">
         Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}
-        ${e.photoUrl ? `<a href="${e.photoUrl}" target="_blank" style="color:#1565c0;text-decoration:underline;">📷 Переглянути фото</a><br>` : ''}
+        Фото (діагностика): "${e.photoUrl}"<br>
         Встановлений: ${e.installedMeterType} ${e.installedMeterNumber}<br>
         ${buildPlombLine(e)}
       </div>
