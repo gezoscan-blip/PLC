@@ -1240,7 +1240,8 @@ function addToJournal(payload, status) {
     installedOptop: payload.installedOptop || '',
     installedImp1: payload.installedImp1 || '',
     installedImp2: payload.installedImp2 || '',
-    installedImp3: payload.installedImp3 || ''
+    installedImp3: payload.installedImp3 || '',
+    photoUrl: payload.photoUrl || ''
   });
   localStorage.setItem('journalPLC', JSON.stringify(journal));
   updateJournalCount();
@@ -1319,6 +1320,7 @@ function renderJournalForDate() {
       <div class="journal-pib">${e.address || '—'}</div>
       <div class="journal-meters">
         Знятий: ${e.removedMeterType} ${e.removedMeterNumber}<br>${buildReadingsLine(e) ? `<b>${buildReadingsLine(e)}</b><br>` : ''}
+        ${e.photoUrl ? `<a href="${e.photoUrl}" target="_blank" style="color:#1565c0;text-decoration:underline;">📷 Переглянути фото</a><br>` : ''}
         Встановлений: ${e.installedMeterType} ${e.installedMeterNumber}<br>
         ${buildPlombLine(e)}
       </div>
