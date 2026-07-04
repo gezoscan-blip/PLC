@@ -868,9 +868,27 @@ function goHome() {
   document.querySelectorAll('#step1 input, #step2 input, #step1 textarea, #step2 textarea').forEach(inp => inp.value = '');
   document.getElementById("account").value = "";
   document.getElementById("saveHint").innerText = "";
+  resetPhotoUI();
   showScreen('searchBlock'); 
   updateOfflineCount();
 }
+
+function resetPhotoUI() {
+  document.getElementById('uploadStatus').textContent = '';
+  document.getElementById('photoUrl').value = '';
+
+  const preview = document.getElementById('photoPreview');
+  preview.src = '';
+  preview.style.display = 'none';
+
+  document.getElementById('fileInput').value = '';
+  document.getElementById('cameraInput').value = '';
+}
+
+  document.getElementById('fileInput').value = '';
+  document.getElementById('cameraInput').value = '';
+}
+  
 function goToStep2() { 
   const remT0 = document.getElementById("remT0").value.trim();
   if(!remT0) return alert("❌ Обов'язково введіть покази 'T' для ЗНЯТОГО лічильника!");
