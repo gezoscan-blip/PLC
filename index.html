@@ -1416,9 +1416,8 @@ document.getElementById('cameraInput').addEventListener('change', async function
 
  function extractPublicId(url) {
   if (!url) return null;
-  const parts = url.split('/');
-  const lastPart = parts[parts.length - 1]; // фото.jpg
-  return lastPart.split('.')[0]; // залишаємо без розширення
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+(?:\?.*)?$/);
+  return match ? match[1] : null;
 }
 
 async function handlePhotoChange(file) {
@@ -1440,13 +1439,63 @@ async function handlePhotoChange(file) {
   await uploadPhotoFile(file);
 }
 
-async function uploadPhotoFile(file) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'unsigned_preset'); // замініть на ваш upload preset
+function compressImage(file, maxSizeKB = 200, maxDimension = 1600) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDimension) {
+          height = Math.round(height * maxDimension / width);
+          width = maxDimension;
+        } else if (height >= width && height > maxDimension) {
+          width = Math.round(width * maxDimension / height);
+          height = maxDimension;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
 
+        let quality = 0.9;
+        const tryCompress = () => {
+          canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error('Не вдалося стиснути зображення'));
+            if (blob.size / 1024 <= maxSizeKB || quality <= 0.3) {
+              resolve(blob);
+            } else {
+              quality -= 0.1;
+              tryCompress();
+            }
+          }, 'image/jpeg', quality);
+        };
+        tryCompress();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+  
+async function uploadPhotoFile(file) {
   const statusEl = document.getElementById('uploadStatus');
   statusEl.style.color = 'black';
+  statusEl.textContent = 'Стиснення фото...';
+
+  let fileToUpload = file;
+  try {
+    fileToUpload = await compressImage(file, 200, 1600);
+  } catch (e) {
+    console.warn('Стиснення не вдалося, вантажимо оригінал:', e);
+  }
+
+  const formData = new FormData();
+  formData.append('file', fileToUpload, 'photo.jpg');
+  formData.append('upload_preset', 'unsigned_preset');
+
   statusEl.textContent = 'Завантаження...';
 
   try {
@@ -1459,7 +1508,7 @@ async function uploadPhotoFile(file) {
 
     if (data.secure_url) {
       statusEl.style.color = 'green';
-      statusEl.textContent = 'Фото завантажено!';
+      statusEl.textContent = `Фото завантажено! (${Math.round(fileToUpload.size/1024)} КБ)`;
       document.getElementById('photoUrl').value = data.secure_url;
     } else {
       statusEl.style.color = 'red';
