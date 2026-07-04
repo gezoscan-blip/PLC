@@ -204,7 +204,15 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <div class="meterBox"><label>T2</label><input id="remT2" inputmode="numeric"></div>
       <div class="meterBox"><label>T3</label><input id="remT3" inputmode="numeric"></div>
     </div>
-
+    
+<input type="file" id="fileInput" accept="image/*" style="display:none;">
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+    
+<div id="uploadStatus" style="margin-top:6px; font-size: 14px;"></div>
+<input type="hidden" id="photoUrl">
+<div id="debugBox" style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px; font-size:12px; word-break:break-all; white-space:pre-wrap; display:none;"></div>    
+<img id="photoPreview" style="max-width: 100%; margin-top:10px; display:none;" alt="Прев’ю фото">
+    
     <div class="blockTitle">Фотозвіт знятого лічильника</div>
 
 <div style="display:flex; gap:8px;">
@@ -314,19 +322,7 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <div class="meterBox"><label>T2</label><input id="instT2" inputmode="numeric"></div>
       <div class="meterBox"><label>T3</label><input id="instT3" inputmode="numeric"></div>
     </div>
-
-<input type="file" id="fileInput" accept="image/*" style="display:none;">
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-    
-<div id="uploadStatus" style="margin-top:6px; font-size: 14px;"></div>
-<input type="hidden" id="photoUrl">
-<div id="debugBox" style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px; font-size:12px; word-break:break-all; white-space:pre-wrap; display:none;"></div>    
-<img id="photoPreview" style="max-width: 100%; margin-top:10px; display:none;" alt="Прев’ю фото">
-
-
-
-
-    
+   
     <button class="btn-save" id="btnSaveMain" onclick="saveData()">💾 Зберегти</button>
     <div id="saveHint"></div>
     <button class="btn-back" onclick="goBackToStep1()">🔙 Назад</button>
