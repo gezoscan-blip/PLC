@@ -301,17 +301,19 @@ textarea { resize: none; overflow: hidden; font-size: 14px; }
       <div class="meterBox"><label>T3</label><input id="instT3" inputmode="numeric"></div>
     </div>
 
-  <div class="blockTitle">Фотозвіт</div>
+<div class="blockTitle">Фотозвіт</div>
 
-<button type="button" onclick="document.getElementById('fileInput').click()" 
-  style="width: 48%; margin-right:4%; background-color: #2196F3; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">
-  Виберіть файл
-</button>
+<div style="display:flex; gap:8px;">
+  <button type="button" onclick="document.getElementById('fileInput').click()" 
+    style="flex:1; margin-top:0; background-color: #2196F3; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">
+    Виберіть файл
+  </button>
 
-<button type="button" onclick="document.getElementById('cameraInput').click()" 
-  style="width: 48%; background-color: #1565c0; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">
-  Зробити фото
-</button>
+  <button type="button" onclick="document.getElementById('cameraInput').click()" 
+    style="flex:1; margin-top:0; background-color: #1565c0; color: white; border: none; border-radius: 8px; height: 44px; font-size: 16px; font-weight: bold;">
+    Зробити фото
+  </button>
+</div>
 
 <input type="file" id="fileInput" accept="image/*" style="display:none;">
 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
