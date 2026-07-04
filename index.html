@@ -1425,13 +1425,14 @@ async function handlePhotoChange(file) {
   if (oldUrl) {
     const publicId = extractPublicId(oldUrl);
     if (publicId) {
-      try {
-        const res = await sendToGoogle('deletePhoto', { publicId });
-        if (!res.success) {
-          console.warn('Помилка видалення старого фото:', res.message);
-        }
-      } catch (e) {
-        console.error('Помилка deletePhoto:', e);
+  try {
+    const res = await sendToGoogle('deletePhoto', { publicId });
+    console.log('Відповідь Cloudinary destroy:', res); // ← додай цей рядок
+    if (res.result !== 'ok' && res.result !== 'not found') {
+      console.warn('Помилка видалення старого фото:', res.error?.message || JSON.stringify(res));
+    }
+  } catch (e) {
+    console.error('Помилка deletePhoto:', e);
       }
     }
   }
