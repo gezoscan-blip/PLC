@@ -1478,7 +1478,7 @@ async function uploadPhotoFile(file) {
 
   let fileToUpload = file;
   try {
-    fileToUpload = await compressImage(file, 200, 1600);
+    fileToUpload = await compressImage(file, 200, 1200);
   } catch (e) {
     console.warn('Стиснення не вдалося, вантажимо оригінал:', e);
   }
